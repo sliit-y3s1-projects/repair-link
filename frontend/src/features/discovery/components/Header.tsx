@@ -50,12 +50,12 @@ export function Header() {
           <button className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]">
             Help
           </button>
-          <button className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md">
+          <Link to="/dashboard" className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md">
             <RiMenuLine className="size-4" />
             <span className="grid size-7 place-items-center rounded-full bg-[#717171] text-[10px] font-bold text-white">
               CS
             </span>
-          </button>
+          </Link>
         </div>
         <button
           onClick={() => setMenuOpen(!menuOpen)}

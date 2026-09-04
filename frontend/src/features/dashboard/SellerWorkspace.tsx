@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { RiAddLine, RiShoppingBagLine } from '@remixicon/react'
+import { RoleLayout } from './RoleLayout'
+
+export function SellerWorkspace() {
+  const [stock, setStock] = useState(12)
+  return <RoleLayout title="Your seller workspace" description="Manage your listings, keep stock accurate, and respond to the repair community quickly."><div className="grid gap-5 md:grid-cols-3">{[['18', 'live listings'], ['5', 'new orders'], ['96%', 'response rate']].map(([value, label]) => <article key={label} className="rounded-xl border border-[#ddd] bg-white p-5"><p className="text-2xl font-semibold">{value}</p><p className="mt-1 text-sm text-[#717171]">{label}</p></article>)}</div><article className="mt-7 rounded-xl border border-[#ddd] bg-white p-6"><div className="flex items-center justify-between"><h2 className="font-semibold">Inventory snapshot</h2><button className="flex items-center gap-1 rounded-lg bg-[#222] px-3 py-2 text-xs font-semibold text-white"><RiAddLine className="size-4" /> Add listing</button></div><div className="mt-5 flex items-center justify-between rounded-lg bg-[#f7f7f7] p-4 text-sm"><span className="font-semibold">iPhone 13 OLED display</span><span className="flex items-center gap-2"><button onClick={() => setStock(Math.max(stock - 1, 0))} className="size-7 rounded border">−</button>{stock}<button onClick={() => setStock(stock + 1)} className="size-7 rounded border">+</button></span><span className="hidden items-center gap-1 text-[#008a05] sm:flex"><RiShoppingBagLine className="size-4" /> In stock</span></div></article></RoleLayout>
+}

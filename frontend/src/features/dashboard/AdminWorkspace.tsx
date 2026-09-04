@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { RiFlagLine, RiShieldCheckLine } from '@remixicon/react'
+import { RoleLayout } from './RoleLayout'
+
+export function AdminWorkspace() {
+  const [resolved, setResolved] = useState(false)
+  return <RoleLayout title="Platform operations" description="Review moderation queues, verify marketplace participants, and govern the impact programme."><div className="grid gap-5 md:grid-cols-3">{[['3', 'open reports'], ['18', 'repairers awaiting review'], ['12', 'active disputes']].map(([value, label]) => <article key={label} className="rounded-xl border border-[#ddd] bg-white p-5"><p className="text-2xl font-semibold">{value}</p><p className="mt-1 text-sm text-[#717171]">{label}</p></article>)}</div><div className="mt-7 grid gap-5 lg:grid-cols-2"><article className="rounded-xl border border-[#ddd] bg-white p-6"><h2 className="flex items-center gap-2 font-semibold"><RiFlagLine className="size-5" /> Latest report</h2><p className="mt-4 text-sm text-[#717171]">Review dispute #R-1028: customer says the quoted repair price changed after diagnosis.</p><button onClick={() => setResolved(true)} className="mt-5 rounded-lg border border-[#222] px-4 py-2.5 text-sm font-semibold">{resolved ? 'Marked resolved' : 'Resolve report'}</button></article><article className="rounded-xl bg-[#e7f1e5] p-6"><h2 className="flex items-center gap-2 font-semibold"><RiShieldCheckLine className="size-5 text-[#008a05]" /> Impact-point rule</h2><p className="mt-4 text-sm text-[#526052]">Verified laptop repair: <strong>120 points</strong></p><button className="mt-5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold">Edit mock rule</button></article></div></RoleLayout>
+}

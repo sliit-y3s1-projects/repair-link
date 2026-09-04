@@ -1,0 +1,13 @@
+import { useState } from 'react'
+import { RiCameraLine, RiSaveLine } from '@remixicon/react'
+import { roleLabels, useAuth } from '@/features/auth/AuthContext'
+import { RoleLayout } from './RoleLayout'
+
+export function ProfilePage() {
+  const { session } = useAuth()
+  const [saved, setSaved] = useState(false)
+  if (!session) return null
+  const isTechnician = session.role === 'technician'
+  const isSeller = session.role === 'seller'
+  return <RoleLayout title="Manage your profile" description="Keep the information customers use to evaluate and contact you accurate."><div className="grid gap-7 lg:grid-cols-[180px_1fr]"><div><div className="grid size-28 place-items-center rounded-full bg-[#222] text-2xl font-bold text-white">CS</div><button className="mt-3 flex items-center gap-1 text-sm font-semibold underline"><RiCameraLine className="size-4" /> Change photo</button></div><form onSubmit={(event) => { event.preventDefault(); setSaved(true) }} className="max-w-2xl rounded-xl border border-[#ddd] bg-white p-6"><div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold">Display name<input className="mt-2 w-full rounded-lg border border-[#ddd] p-3 font-normal" defaultValue={session.name} /></label><label className="text-sm font-semibold">Phone<input className="mt-2 w-full rounded-lg border border-[#ddd] p-3 font-normal" defaultValue="+94 77 123 4567" /></label></div>{isTechnician && <><label className="mt-5 block text-sm font-semibold">Service area<input className="mt-2 w-full rounded-lg border border-[#ddd] p-3 font-normal" defaultValue="Colombo and surrounding areas" /></label><label className="mt-5 block text-sm font-semibold">Services offered<textarea className="mt-2 min-h-24 w-full rounded-lg border border-[#ddd] p-3 font-normal" defaultValue="Phone repairs, laptop diagnostics, screen replacement" /></label></>}{isSeller && <label className="mt-5 block text-sm font-semibold">Store name<input className="mt-2 w-full rounded-lg border border-[#ddd] p-3 font-normal" defaultValue="TechParts LK" /></label>}{session.role === 'consumer' && <label className="mt-5 block text-sm font-semibold">Preferred contact method<select className="mt-2 w-full rounded-lg border border-[#ddd] p-3 font-normal"><option>In-app messages</option><option>Phone call</option></select></label>}<p className="mt-5 text-xs text-[#717171]">Profile type: {roleLabels[session.role]}</p><button className="mt-6 flex items-center gap-2 rounded-lg bg-[#222] px-4 py-3 text-sm font-semibold text-white"><RiSaveLine className="size-4" /> {saved ? 'Saved' : 'Save changes'}</button></form></div></RoleLayout>
+}
