@@ -1,5 +1,5 @@
-import { ApiError } from '../shared/api-response';
-import { technicianRepository } from '../repositories/technician.repository';
+import { ApiError } from '../../shared/api-response';
+import { technicianRepository } from './technician.repository';
 import {
   AvailabilityItem,
   CategoryItem,
@@ -9,7 +9,7 @@ import {
   TechnicianDiscoveryFilters,
   TechnicianProfile,
   TechnicianPublicProfile,
-} from '../models/technician.types';
+} from './technician.types';
 
 const ensureTechnicianExists = (technicianId: string) => {
   const profile = technicianRepository.getById(technicianId);
@@ -18,6 +18,14 @@ const ensureTechnicianExists = (technicianId: string) => {
   }
 
   return profile;
+};
+
+type TechnicianProfileUpdate = Omit<
+  Partial<TechnicianProfile>,
+  'trust' | 'impact'
+> & {
+  trust?: Partial<TechnicianProfile['trust']>;
+  impact?: Partial<TechnicianProfile['impact']>;
 };
 
 export const technicianService = {
@@ -46,10 +54,7 @@ export const technicianService = {
 
   updateProfile(
     technicianId: string,
-    updates: Partial<TechnicianProfile> & {
-      trust?: Partial<TechnicianProfile['trust']>;
-      impact?: Partial<TechnicianProfile['impact']>;
-    },
+    updates: TechnicianProfileUpdate,
   ) {
     const profile = ensureTechnicianExists(technicianId);
     const mergedUpdate = {

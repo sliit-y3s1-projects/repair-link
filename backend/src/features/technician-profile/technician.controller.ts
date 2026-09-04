@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { technicianService } from '../services/technician.service';
-import { ApiError, sendError, sendSuccess } from '../shared/api-response';
+import { technicianService } from './technician.service';
+import { ApiError, sendError, sendSuccess } from '../../shared/api-response';
 import {
   addCategorySchema,
   addPortfolioItemSchema,
@@ -14,7 +14,7 @@ import {
   updateServiceSchema,
   updateTechnicianProfileSchema,
   upsertAvailabilitySchema,
-} from '../validation/technician.validation';
+} from './technician.schema';
 
 const getValidationErrors = (error: z.ZodError) =>
   error.issues.map((issue) => issue.message);
@@ -92,7 +92,7 @@ export const updateTechnicianProfileController = async (req: Request, res: Respo
   try {
     const { technicianId } = parseParams(req, technicianIdParamSchema, 'technician ID');
     const updates = parseBody(req, updateTechnicianProfileSchema, 'technician profile update');
-    const profile = technicianService.updateProfile(technicianId, updates as any);
+    const profile = technicianService.updateProfile(technicianId, updates);
     return sendSuccess(res, 200, 'Technician profile updated successfully', profile);
   } catch (error) {
     if (error instanceof ApiError) {

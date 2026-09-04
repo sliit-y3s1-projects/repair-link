@@ -9,7 +9,7 @@ import {
   TechnicianProfile,
   TechnicianPublicProfile,
   TechnicianTrustSummary,
-} from '../models/technician.types';
+} from './technician.types';
 
 const technicians = new Map<string, TechnicianProfile>();
 

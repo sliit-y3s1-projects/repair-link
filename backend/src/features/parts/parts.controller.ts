@@ -7,7 +7,7 @@ import {
   UpdatePartListingSchema,
 } from './parts.schema';
 import { DevActor, partsService } from './parts.service';
-import { ApiError, sendError, sendSuccess } from '../technician-profile/shared/api-response';
+import { ApiError, sendError, sendSuccess } from '../../shared/api-response';
 
 const getValidationErrors = (error: z.ZodError) =>
   error.issues.map((issue) => issue.message);
