@@ -1,6 +1,7 @@
 declare module 'express' {
   export interface Request {
     body: any;
+    headers: Record<string, string | string[] | undefined>;
     params: Record<string, string>;
     query: Record<string, string | string[] | undefined>;
   }
