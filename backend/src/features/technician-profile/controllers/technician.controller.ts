@@ -92,7 +92,7 @@ export const updateTechnicianProfileController = async (req: Request, res: Respo
   try {
     const { technicianId } = parseParams(req, technicianIdParamSchema, 'technician ID');
     const updates = parseBody(req, updateTechnicianProfileSchema, 'technician profile update');
-    const profile = technicianService.updateProfile(technicianId, updates as any);
+    const profile = technicianService.updateProfile(technicianId, updates);
     return sendSuccess(res, 200, 'Technician profile updated successfully', profile);
   } catch (error) {
     if (error instanceof ApiError) {

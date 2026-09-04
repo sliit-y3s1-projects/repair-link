@@ -20,6 +20,14 @@ const ensureTechnicianExists = (technicianId: string) => {
   return profile;
 };
 
+type TechnicianProfileUpdate = Omit<
+  Partial<TechnicianProfile>,
+  'trust' | 'impact'
+> & {
+  trust?: Partial<TechnicianProfile['trust']>;
+  impact?: Partial<TechnicianProfile['impact']>;
+};
+
 export const technicianService = {
   listTechnicians(filters: TechnicianDiscoveryFilters) {
     return technicianRepository.list(filters);
@@ -46,10 +54,7 @@ export const technicianService = {
 
   updateProfile(
     technicianId: string,
-    updates: Partial<TechnicianProfile> & {
-      trust?: Partial<TechnicianProfile['trust']>;
-      impact?: Partial<TechnicianProfile['impact']>;
-    },
+    updates: TechnicianProfileUpdate,
   ) {
     const profile = ensureTechnicianExists(technicianId);
     const mergedUpdate = {

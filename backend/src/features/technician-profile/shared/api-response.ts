@@ -1,14 +1,15 @@
 import { Response } from 'express';
 
 export class ApiError extends Error {
-  statusCode: number;
-  errors: string[];
+  readonly statusCode: number;
+  readonly errors: string[];
 
   constructor(statusCode: number, message: string, errors: string[] = []) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.errors = errors;
+    Error.captureStackTrace(this, ApiError);
   }
 }
 
@@ -17,7 +18,7 @@ export const sendSuccess = (
   statusCode: number,
   message: string,
   data: unknown,
-) => {
+): Response => {
   return res.status(statusCode).json({
     success: true,
     message,
@@ -30,7 +31,7 @@ export const sendError = (
   statusCode: number,
   message: string,
   errors: string[] = [],
-) => {
+): Response => {
   return res.status(statusCode).json({
     success: false,
     message,
