@@ -60,37 +60,20 @@ export function Header() {
           </NavLink>
         </nav>
         <div className="hidden items-center gap-4 md:flex">
-          {session ? (
-            <Link
-              to={roleDashboardPaths[session.role]}
-              className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md"
-            >
-              <RiMenuLine className="size-4" />
-              <span className="flex items-center gap-1.5">
-                <span
-                  className="grid size-7 place-items-center rounded-full bg-[#717171] text-[10px] font-bold text-white"
-                  title={roleLabels[session.role]}
-                >
-                  {initials}
-                </span>
-                <span className="pr-1 text-[10px] font-semibold text-[#6a6a6a]">
-                  {roleLabels[session.role]}
-                </span>
-              </span>
-            </Link>
-          ) : (
-            <>
-              <button className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]">
-                Help
-              </button>
-              <Link
-                to="/auth"
-                className="rounded-full border border-[#ddd] px-4 py-2 text-sm font-medium shadow-sm hover:shadow-md"
-              >
-                Sign in
-              </Link>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('repairlink:open-ai-chat'))}
+            className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]"
+            aria-label="Open AI repair help"
+          >
+            Help
+          </button>
+          <Link to="/dashboard" className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md">
+            <RiMenuLine className="size-4" />
+            <span className="grid size-7 place-items-center rounded-full bg-[#717171] text-[10px] font-bold text-white">
+              CS
+            </span>
+          </Link>
         </div>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
