@@ -1,9 +1,20 @@
 import { useState } from "react";
 import { RiMenuLine, RiToolsLine } from "@remixicon/react";
 import { Link, NavLink } from "react-router";
+import { useAuth, roleDashboardPaths, roleLabels } from "@/features/auth/AuthContext";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { session } = useAuth();
+
+  const initials = session
+    ? session.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('')
+    : null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#ebebeb] bg-white">
@@ -47,15 +58,37 @@ export function Header() {
           </NavLink>
         </nav>
         <div className="hidden items-center gap-4 md:flex">
-          <button className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]">
-            Help
-          </button>
-          <Link to="/dashboard" className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md">
-            <RiMenuLine className="size-4" />
-            <span className="grid size-7 place-items-center rounded-full bg-[#717171] text-[10px] font-bold text-white">
-              CS
-            </span>
-          </Link>
+          {session ? (
+            <Link
+              to={roleDashboardPaths[session.role]}
+              className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md"
+            >
+              <RiMenuLine className="size-4" />
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="grid size-7 place-items-center rounded-full bg-[#717171] text-[10px] font-bold text-white"
+                  title={roleLabels[session.role]}
+                >
+                  {initials}
+                </span>
+                <span className="pr-1 text-[10px] font-semibold text-[#6a6a6a]">
+                  {roleLabels[session.role]}
+                </span>
+              </span>
+            </Link>
+          ) : (
+            <>
+              <button className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]">
+                Help
+              </button>
+              <Link
+                to="/auth"
+                className="rounded-full border border-[#ddd] px-4 py-2 text-sm font-medium shadow-sm hover:shadow-md"
+              >
+                Sign in
+              </Link>
+            </>
+          )}
         </div>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
@@ -71,7 +104,11 @@ export function Header() {
             <Link to="/">Find a repairer</Link>
             <Link to="/parts">Browse parts</Link>
             <Link to="/technician">Become a repairer</Link>
-            <Link to="/dashboard">My repairs</Link>
+            {session ? (
+              <Link to={roleDashboardPaths[session.role]}>My workspace</Link>
+            ) : (
+              <Link to="/auth">Sign in</Link>
+            )}
           </div>
         </nav>
       )}

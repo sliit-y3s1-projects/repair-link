@@ -32,13 +32,140 @@ export function TechnicianLeadsPage() {
   const { requests, quotes, createQuote } = useMarketplace()
   const leads = requests.filter((request) => request.status === 'requested' || request.status === 'quoted')
   const [amounts, setAmounts] = useState<Record<string, string>>({})
-  return <RoleLayout title="Repair leads" description="Review eligible local requests and send clear quotes while the customer is active."><div className="flex items-center justify-between"><p className="text-sm text-[#718077]">{leads.length} leads matching your services</p><span className="rounded-full bg-[#e9f4ec] px-3 py-1.5 text-xs font-semibold text-[#287044]">Colombo service area</span></div><div className="mt-5 space-y-4">{leads.map((lead) => { const sent = quotes.some((quote) => quote.requestId === lead.id && quote.technician === 'Kamal’s Device Care'); return <article key={lead.id} className="rounded-xl border border-[#dfe6e0] bg-white p-5"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="flex items-center gap-2"><h2 className="text-lg font-semibold">{lead.title}</h2><StatusPill status={lead.status} /></div><p className="mt-2 text-sm text-[#65736a]">{lead.location} · {lead.preferredTime} · Budget up to Rs. {lead.budget.toLocaleString()}</p><p className="mt-4 max-w-2xl text-sm leading-6 text-[#5c6a60]">{lead.issue}</p></div><div className="flex min-w-[260px] gap-2"><label className="flex flex-1 items-center rounded-lg border border-[#d4ded6] px-3"><span className="mr-1 text-sm text-[#77847b]">Rs.</span><input value={amounts[lead.id] ?? ''} onChange={(event) => setAmounts((current) => ({ ...current, [lead.id]: event.target.value }))} className="min-w-0 flex-1 py-2.5 text-sm font-semibold outline-none" placeholder="Quote" inputMode="numeric" /></label><button disabled={sent || !amounts[lead.id]} onClick={() => createQuote(lead.id, Number(amounts[lead.id].replaceAll(',', '')))} className="rounded-lg bg-[#157a5a] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{sent ? 'Sent' : 'Send quote'}</button></div></div></article>})}{leads.length === 0 && <div className="rounded-xl border border-dashed border-[#cfdad1] bg-white p-10 text-center"><RiInboxLine className="mx-auto size-7 text-[#779083]" /><p className="mt-3 font-semibold">No leads need a quote right now</p><p className="mt-1 text-sm text-[#718077]">New requests matching your profile will appear here.</p></div>}</div></RoleLayout>
+  return (
+    <RoleLayout title="Repair leads" description="Review eligible local requests and send clear quotes while the customer is active.">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[#718077]">{leads.length} leads matching your services</p>
+        <span className="rounded-full bg-[#e9f4ec] px-3 py-1.5 text-xs font-semibold text-[#287044]">Colombo service area</span>
+      </div>
+      <div className="mt-5 space-y-4">
+        {leads.map((lead) => {
+          const sent = quotes.some((quote) => quote.requestId === lead.id && quote.technician === 'Kamal’s Device Care')
+          return (
+            <article key={lead.id} className="rounded-xl border border-[#dfe6e0] bg-white p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold">{lead.title}</h2>
+                    <StatusPill status={lead.status} />
+                  </div>
+                  <p className="mt-2 text-sm text-[#65736a]">{lead.location} · {lead.preferredTime} · Budget up to Rs. {lead.budget.toLocaleString()}</p>
+                  <p className="mt-4 max-w-2xl text-sm leading-6 text-[#5c6a60]">{lead.issue}</p>
+                </div>
+                <div className="flex min-w-[260px] gap-2">
+                  <label className="flex flex-1 items-center rounded-lg border border-[#d4ded6] px-3">
+                    <span className="mr-1 text-sm text-[#77847b]">Rs.</span>
+                    <input
+                      value={amounts[lead.id] ?? ''}
+                      onChange={(event) => setAmounts((current) => ({ ...current, [lead.id]: event.target.value }))}
+                      className="min-w-0 flex-1 py-2.5 text-sm font-semibold outline-none"
+                      placeholder="Quote"
+                      inputMode="numeric"
+                    />
+                  </label>
+                  <button
+                    disabled={sent || !amounts[lead.id]}
+                    onClick={() => createQuote(lead.id, Number(amounts[lead.id].replaceAll(',', '')))}
+                    className="rounded-lg bg-[#157a5a] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {sent ? 'View quote' : 'Send quote'}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4 border-t border-[#edf0ed] pt-3">
+                <Link to={'/consumer/repairs/' + lead.id} className="text-sm font-semibold text-[#157a5a]">
+                  View full request <RiArrowRightLine className="mb-0.5 inline size-4" />
+                </Link>
+              </div>
+            </article>
+          )
+        })}
+        {leads.length === 0 && (
+          <div className="rounded-xl border border-dashed border-[#cfdad1] bg-white p-10 text-center">
+            <RiInboxLine className="mx-auto size-7 text-[#779083]" />
+            <p className="mt-3 font-semibold">No leads need a quote right now</p>
+            <p className="mt-1 text-sm text-[#718077]">New requests matching your profile will appear here.</p>
+          </div>
+        )}
+      </div>
+    </RoleLayout>
+  )
 }
 
 export function TechnicianJobsPage() {
   const { requests, updateRepairStatus } = useMarketplace()
-  const jobs = requests.filter((request) => ['booked', 'in_progress', 'waiting_for_parts'].includes(request.status))
-  return <RoleLayout title="Active jobs" description="Keep customers informed with timely progress updates and clear next steps."><div className="grid gap-4 lg:grid-cols-2">{jobs.map((job) => <article key={job.id} className="rounded-xl border border-[#dfe6e0] bg-white p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">{job.title}</h2><p className="mt-1 text-sm text-[#6d7a72]">{job.scheduledFor ?? 'Schedule to confirm'} · {job.location}</p></div><StatusPill status={job.status} /></div><div className="mt-5 flex flex-wrap gap-2">{(['in_progress', 'waiting_for_parts', 'completed'] as RepairStatus[]).map((status) => <button key={status} onClick={() => updateRepairStatus(job.id, status)} disabled={job.status === status} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${job.status === status ? 'border-[#157a5a] bg-[#eaf5ed] text-[#246043]' : 'border-[#d8e0da] text-[#627068]'}`}>{repairStatusLabel[status]}</button>)}</div><Link to="/technician/messages" className="mt-5 inline-flex text-sm font-semibold text-[#157a5a]">Open conversation <RiArrowRightLine className="ml-1 size-4" /></Link></article>)}</div></RoleLayout>
+  const activeJobs = requests.filter((request) => ['booked', 'in_progress', 'waiting_for_parts'].includes(request.status))
+  const doneJobs = requests.filter((request) => ['completed', 'cancelled'].includes(request.status))
+  const hasAny = activeJobs.length > 0 || doneJobs.length > 0
+  return (
+    <RoleLayout title="Active jobs" description="Keep customers informed with timely progress updates and clear next steps.">
+      {!hasAny && (
+        <div className="rounded-xl border border-dashed border-[#cfdad1] bg-white p-10 text-center">
+          <RiInboxLine className="mx-auto size-7 text-[#779083]" />
+          <p className="mt-3 font-semibold">No jobs yet</p>
+          <p className="mt-1 text-sm text-[#718077]">Accepted repair requests will appear here.</p>
+        </div>
+      )}
+      {activeJobs.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-[.12em] text-[#718077]">Active</h2>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {activeJobs.map((job) => (
+              <article key={job.id} className="rounded-xl border border-[#dfe6e0] bg-white p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold">{job.title}</h2>
+                    <p className="mt-1 text-sm text-[#6d7a72]">{job.scheduledFor ?? 'Schedule to confirm'} · {job.location}</p>
+                  </div>
+                  <StatusPill status={job.status} />
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {(['in_progress', 'waiting_for_parts', 'completed'] as RepairStatus[]).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => updateRepairStatus(job.id, status)}
+                      disabled={job.status === status}
+                      className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+                        job.status === status
+                          ? 'border-[#157a5a] bg-[#eaf5ed] text-[#246043]'
+                          : 'border-[#d8e0da] text-[#627068]'
+                      }`}
+                    >
+                      {repairStatusLabel[status]}
+                    </button>
+                  ))}
+                </div>
+                <Link to="/technician/messages" className="mt-5 inline-flex text-sm font-semibold text-[#157a5a]">
+                  Open conversation <RiArrowRightLine className="ml-1 size-4" />
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      {doneJobs.length > 0 && (
+        <section className={activeJobs.length > 0 ? 'mt-8' : ''}>
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-[.12em] text-[#718077]">Completed &amp; cancelled</h2>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {doneJobs.map((job) => (
+              <article key={job.id} className="rounded-xl border border-[#dfe6e0] bg-white p-5 opacity-80">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold">{job.title}</h2>
+                    <p className="mt-1 text-sm text-[#6d7a72]">{job.scheduledFor ?? 'N/A'} · {job.location}</p>
+                  </div>
+                  <StatusPill status={job.status} />
+                </div>
+                <p className="mt-4 text-xs text-[#88958d]">
+                  {job.status === 'completed' ? 'This repair has been completed.' : 'This job was cancelled.'}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+    </RoleLayout>
+  )
 }
 
 export function SellerOrdersPage() {
@@ -49,7 +176,69 @@ export function SellerOrdersPage() {
 export function AdminQueuesPage() {
   const [verified, setVerified] = useState(false)
   const [resolved, setResolved] = useState(false)
-  return <RoleLayout title="Operations queue" description="Review verification, moderation, disputes, and actions that keep the marketplace trusted."><div className="grid gap-6 lg:grid-cols-2"><article className="rounded-xl border border-[#dfe6e0] bg-white"><div className="border-b border-[#e8ede9] bg-[#f5faf6] px-5 py-4"><p className="text-xs font-bold uppercase tracking-[.12em] text-[#5c806a]">Verification</p><h2 className="mt-1 flex items-center gap-2 font-semibold"><RiClipboardLine className="size-5 text-[#157a5a]" /> Technician profile review</h2></div><div className="p-5"><p className="font-semibold">Mobile Medic</p><p className="mt-1 text-sm text-[#6c796f]">Apple & Android repairs · Colombo · Documents submitted</p><button onClick={() => setVerified(true)} className="mt-5 rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">{verified ? 'Verified' : 'Verify profile'}</button></div></article><article className="rounded-xl border border-[#eadfd9] bg-white"><div className="border-b border-[#f0e5df] bg-[#fdf7f3] px-5 py-4"><p className="text-xs font-bold uppercase tracking-[.12em] text-[#a07141]">Dispute</p><h2 className="mt-1 flex items-center gap-2 font-semibold"><RiFlagLine className="size-5 text-[#a07141]" /> Quote changed after diagnosis</h2></div><div className="p-5"><p className="text-sm leading-6 text-[#6c706c]">Customer disputes repair R-1028 after a changed service amount.</p><button onClick={() => setResolved(true)} className="mt-5 rounded-lg border border-[#c9d4cc] px-4 py-2.5 text-sm font-semibold">{resolved ? 'Marked resolved' : 'Open resolution'}</button></div></article><article className="rounded-xl bg-[#183f2f] p-6 text-white lg:col-span-2"><p className="text-xs font-bold uppercase tracking-[.12em] text-[#aed3ba]">Impact rules</p><div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h2 className="text-xl font-semibold">Laptop repair awards 120 impact points</h2><p className="mt-2 text-sm text-[#c5ddcc]">Current rule version: 2026.1 · Last changed by admin.</p></div><button className="rounded-lg bg-white/10 px-4 py-2.5 text-sm font-semibold">Manage rules</button></div></article></div></RoleLayout>
+  const { requests, updateRepairStatus } = useMarketplace()
+  const disputedRequests = requests.filter(r => r.status === 'disputed')
+  return (
+    <RoleLayout title="Operations queue" description="Review verification, moderation, disputes, and actions that keep the marketplace trusted.">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <article className="rounded-xl border border-[#dfe6e0] bg-white">
+          <div className="border-b border-[#e8ede9] bg-[#f5faf6] px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-[.12em] text-[#5c806a]">Verification</p>
+            <h2 className="mt-1 flex items-center gap-2 font-semibold"><RiClipboardLine className="size-5 text-[#157a5a]" /> Technician profile review</h2>
+          </div>
+          <div className="p-5">
+            <p className="font-semibold">Mobile Medic</p>
+            <p className="mt-1 text-sm text-[#6c796f]">Apple & Android repairs · Colombo · Documents submitted</p>
+            <button onClick={() => setVerified(true)} className="mt-5 rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">{verified ? 'Verified' : 'Verify profile'}</button>
+          </div>
+        </article>
+        <article className="rounded-xl border border-[#eadfd9] bg-white">
+          <div className="border-b border-[#f0e5df] bg-[#fdf7f3] px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-[.12em] text-[#a07141]">Dispute</p>
+            <h2 className="mt-1 flex items-center gap-2 font-semibold"><RiFlagLine className="size-5 text-[#a07141]" /> Quote changed after diagnosis</h2>
+          </div>
+          <div className="p-5">
+            <p className="text-sm leading-6 text-[#6c706c]">Customer disputes repair R-1028 after a changed service amount.</p>
+            <button onClick={() => setResolved(true)} className="mt-5 rounded-lg border border-[#c9d4cc] px-4 py-2.5 text-sm font-semibold">{resolved ? 'Marked resolved' : 'Open resolution'}</button>
+          </div>
+        </article>
+        {disputedRequests.length > 0 && (
+          <article className="rounded-xl border border-[#eadfd9] bg-white lg:col-span-2">
+            <div className="border-b border-[#f0e5df] bg-[#fdf7f3] px-5 py-4">
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#a07141]">Disputed repairs</p>
+              <h2 className="mt-1 font-semibold">Active disputes needing resolution</h2>
+            </div>
+            <div className="divide-y divide-[#f0e5df]">
+              {disputedRequests.map(req => (
+                <div key={req.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                  <div>
+                    <p className="font-semibold">{req.title}</p>
+                    <p className="mt-1 text-sm text-[#7a6c65]">{req.location} · {req.device}</p>
+                  </div>
+                  <button
+                    onClick={() => updateRepairStatus(req.id, 'completed')}
+                    className="rounded-lg bg-[#157a5a] px-3 py-2 text-xs font-semibold text-white"
+                  >
+                    Mark resolved
+                  </button>
+                </div>
+              ))}
+            </div>
+          </article>
+        )}
+        <article className="rounded-xl bg-[#183f2f] p-6 text-white lg:col-span-2">
+          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#aed3ba]">Impact rules</p>
+          <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <h2 className="text-xl font-semibold">Laptop repair awards 120 impact points</h2>
+              <p className="mt-2 text-sm text-[#c5ddcc]">Current rule version: 2026.1 · Last changed by admin.</p>
+            </div>
+            <button className="rounded-lg bg-white/10 px-4 py-2.5 text-sm font-semibold">Manage rules</button>
+          </div>
+        </article>
+      </div>
+    </RoleLayout>
+  )
 }
 
 export function NotificationsPage() {
