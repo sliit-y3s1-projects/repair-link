@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { RiCloseLine, RiMessage3Line, RiSendPlane2Line, RiSparkling2Line } from '@remixicon/react'
+import { RiCloseLine, RiRobot2Line, RiSendPlane2Line } from '@remixicon/react'
 import { Link } from 'react-router'
 
 type TechnicianMatch = {
@@ -86,8 +86,9 @@ export function AiRepairChat() {
           aria-label="RepairLink AI Repair Assistant"
         >
           <header className="flex items-center gap-3 bg-[#176b4d] px-4 py-3.5 text-white">
-            <span className="grid size-9 place-items-center rounded-full bg-white/15">
-              <RiSparkling2Line className="size-5" />
+            <span className="relative grid size-10 place-items-center rounded-xl border border-white/20 bg-white/15 shadow-inner">
+              <RiRobot2Line className="size-6" />
+              <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-[#176b4d] bg-[#f5c451]" />
             </span>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-semibold">AI Repair Assistant</h2>
@@ -163,11 +164,25 @@ export function AiRepairChat() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="ml-auto grid size-14 place-items-center rounded-full bg-[#176b4d] text-white shadow-xl transition hover:scale-105 hover:bg-[#12583f] focus:outline-none focus:ring-2 focus:ring-[#176b4d] focus:ring-offset-2"
+        className={`group relative ml-auto flex h-16 items-center justify-center overflow-visible rounded-full border-2 border-white bg-[#176b4d] text-white shadow-[0_12px_35px_rgba(23,107,77,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#12583f] hover:shadow-[0_16px_40px_rgba(23,107,77,0.45)] focus:outline-none focus:ring-2 focus:ring-[#176b4d] focus:ring-offset-2 ${open ? 'w-16' : 'w-16 sm:w-auto sm:px-5'}`}
         aria-label={open ? 'Close AI Repair Assistant' : 'Open AI Repair Assistant'}
         aria-expanded={open}
       >
-        {open ? <RiCloseLine className="size-6" /> : <RiMessage3Line className="size-6" />}
+        {!open && <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-[#2d9a70]/25 [animation-duration:2.4s]" />}
+        {open ? (
+          <RiCloseLine className="size-7" />
+        ) : (
+          <>
+            <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-white/15">
+              <RiRobot2Line className="size-7 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
+              <span className="absolute right-0 top-0 size-3 rounded-full border-2 border-[#176b4d] bg-[#f5c451]" />
+            </span>
+            <span className="ml-2 hidden text-left sm:block">
+              <span className="block text-sm font-bold leading-tight">AI Repair Help</span>
+              <span className="block text-[10px] font-medium text-white/75">Ask me anything</span>
+            </span>
+          </>
+        )}
       </button>
     </div>
   )
