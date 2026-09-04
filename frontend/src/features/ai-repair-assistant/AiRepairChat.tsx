@@ -85,14 +85,13 @@ export function AiRepairChat() {
           className="mb-3 flex h-[min(620px,calc(100vh-7rem))] w-[min(390px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-[#dfe6e1] bg-white shadow-2xl"
           aria-label="RepairLink AI Repair Assistant"
         >
-          <header className="flex items-center gap-3 bg-[#176b4d] px-4 py-3.5 text-white">
-            <span className="relative grid size-10 place-items-center rounded-xl border border-white/20 bg-white/15 shadow-inner">
-              <RiRobot2Line className="size-6" />
-              <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-[#176b4d] bg-[#f5c451]" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-semibold">AI Repair Assistant</h2>
-              <p className="text-[11px] text-white/75">Describe what is going wrong</p>
+          <header className="flex items-center justify-between bg-[#176b4d] px-4 py-3.5 text-white">
+            <div className="flex items-center gap-3">
+              <span className="relative grid size-10 place-items-center rounded-xl border border-white/20 bg-white/15 shadow-inner">
+                <RiRobot2Line className="size-6" />
+                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-[#176b4d] bg-[#f5c451]" />
+              </span>
+              <h2 className="text-sm font-semibold tracking-tight">Ask RepairLink</h2>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="grid size-8 place-items-center rounded-full hover:bg-white/15" aria-label="Close assistant">
               <RiCloseLine className="size-5" />
@@ -151,7 +150,20 @@ export function AiRepairChat() {
 
           <form onSubmit={submitQuestion} className="border-t border-[#e3e8e4] bg-white p-3">
             <div className="flex items-end gap-2 rounded-xl border border-[#d9e1db] bg-[#fafbfa] p-2 focus-within:border-[#176b4d]">
-              <textarea value={question} onChange={(event) => setQuestion(event.target.value)} rows={2} maxLength={2000} placeholder="Ask about a repair problem…" className="max-h-24 min-h-10 flex-1 resize-none bg-transparent px-1 py-1 text-sm outline-none" />
+              <textarea
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault()
+                    event.currentTarget.form?.requestSubmit()
+                  }
+                }}
+                rows={2}
+                maxLength={2000}
+                placeholder="Ask about a repair problem…"
+                className="max-h-24 min-h-10 flex-1 resize-none bg-transparent px-1 py-1 text-sm outline-none"
+              />
               <button type="submit" disabled={question.trim().length < 5 || loading} className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#176b4d] text-white disabled:cursor-not-allowed disabled:opacity-40" aria-label="Send question">
                 <RiSendPlane2Line className="size-4" />
               </button>
@@ -164,7 +176,7 @@ export function AiRepairChat() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`group relative ml-auto flex h-16 items-center justify-center overflow-visible rounded-full border-2 border-white bg-[#176b4d] text-white shadow-[0_12px_35px_rgba(23,107,77,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#12583f] hover:shadow-[0_16px_40px_rgba(23,107,77,0.45)] focus:outline-none focus:ring-2 focus:ring-[#176b4d] focus:ring-offset-2 ${open ? 'w-16' : 'w-16 sm:w-auto sm:px-5'}`}
+        className="group relative ml-auto flex size-16 items-center justify-center overflow-visible rounded-full border-2 border-white bg-[#176b4d] text-white shadow-[0_12px_35px_rgba(23,107,77,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#12583f] hover:shadow-[0_16px_40px_rgba(23,107,77,0.45)] focus:outline-none focus:ring-2 focus:ring-[#176b4d] focus:ring-offset-2"
         aria-label={open ? 'Close AI Repair Assistant' : 'Open AI Repair Assistant'}
         aria-expanded={open}
       >
@@ -176,10 +188,6 @@ export function AiRepairChat() {
             <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-white/15">
               <RiRobot2Line className="size-7 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
               <span className="absolute right-0 top-0 size-3 rounded-full border-2 border-[#176b4d] bg-[#f5c451]" />
-            </span>
-            <span className="ml-2 hidden text-left sm:block">
-              <span className="block text-sm font-bold leading-tight">AI Repair Help</span>
-              <span className="block text-[10px] font-medium text-white/75">Ask me anything</span>
             </span>
           </>
         )}
