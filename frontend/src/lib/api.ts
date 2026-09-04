@@ -1,4 +1,6 @@
 const API_BASE = (import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/$/, '') + '/api/v1'
+let accessToken: string | null = localStorage.getItem('repair-link-access-token')
+export const setAccessToken = (token: string | null) => { accessToken = token; if (token) localStorage.setItem('repair-link-access-token', token); else localStorage.removeItem('repair-link-access-token') }
 
 export const developmentActors = {
   consumer: { id: '00000000-0000-4000-8000-000000000001', name: 'Nimal Fernando' },
@@ -10,7 +12,8 @@ export const developmentActors = {
 export async function apiRequest<T>(path: string, options: RequestInit = {}, role?: keyof typeof developmentActors): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Content-Type', 'application/json')
-  if (role) {
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+  else if (role) {
     const actor = developmentActors[role]
     headers.set('x-dev-actor-id', actor.id)
     headers.set('x-dev-actor-name', actor.name)
@@ -21,6 +24,12 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}, rol
   if (!response.ok || payload.success === false) throw new Error(payload.message ?? payload.errors?.join(', ') ?? 'API request failed')
   return payload.data as T
 }
+
+export type AuthUser = { id: string; email: string; name: string; role: keyof typeof developmentActors }
+export type AuthResult = { token: string; user: AuthUser }
+export const register = (input: { email: string; password: string; displayName: string; role: 'consumer' | 'technician' | 'seller' }) => apiRequest<AuthResult>('/auth/register', { method: 'POST', body: JSON.stringify(input) })
+export const login = (input: { email: string; password: string }) => apiRequest<AuthResult>('/auth/login', { method: 'POST', body: JSON.stringify(input) })
+export const getCurrentUser = () => apiRequest<{ user: AuthUser }>('/auth/me')
 
 export type ApiPart = { id: string; name: string; sku: string; price: number; quantity: number; condition: 'new' | 'compatible' | 'refurbished' | 'used'; isActive: boolean }
 export const listParts = (query = '') => apiRequest<{ total: number; parts: ApiPart[] }>(`/parts${query ? `?query=${encodeURIComponent(query)}` : ''}`)

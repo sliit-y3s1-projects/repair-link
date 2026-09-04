@@ -20,7 +20,7 @@ export const reportStatus = pgEnum('report_status', ['open', 'reviewing', 'resol
 export const reportTarget = pgEnum('report_target', ['user', 'review', 'listing', 'repair', 'order']);
 
 export const platformUsers = pgTable('platform_users', {
-  id: uuid('id').defaultRandom().primaryKey(), email: varchar('email', { length: 255 }).notNull().unique(), displayName: varchar('display_name', { length: 120 }).notNull(), phone: varchar('phone', { length: 32 }), primaryRole: userRole('primary_role').notNull().default('consumer'), isActive: boolean('is_active').notNull().default(true), ...timestamps,
+  id: uuid('id').defaultRandom().primaryKey(), email: varchar('email', { length: 255 }).notNull().unique(), passwordHash: varchar('password_hash', { length: 255 }), displayName: varchar('display_name', { length: 120 }).notNull(), phone: varchar('phone', { length: 32 }), primaryRole: userRole('primary_role').notNull().default('consumer'), isActive: boolean('is_active').notNull().default(true), ...timestamps,
 });
 
 export const consumerProfiles = pgTable('consumer_profiles', {

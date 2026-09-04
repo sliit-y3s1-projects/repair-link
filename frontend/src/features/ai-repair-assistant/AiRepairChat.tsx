@@ -24,7 +24,7 @@ type ChatMessage =
   | { id: number; sender: 'assistant'; reply: AssistantReply }
   | { id: number; sender: 'error'; text: string }
 
-const apiBaseUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/$/, '')
+const apiBaseUrl = (import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/$/, '')
 
 export function AiRepairChat() {
   const [open, setOpen] = useState(false)

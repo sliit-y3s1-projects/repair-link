@@ -41,12 +41,13 @@ export function PartsPage() {
     [category, condition, query, parts],
   )
 
-  function handleAddToCart(id: string) {
+  async function handleAddToCart(id: string) {
     if (cart.includes(id)) {
       setCart((items) => items.filter((item) => item !== id))
     } else {
-      placeOrder(id, 1)
-      setCart((items) => [...items, id])
+      const placed = await placeOrder(id, 1)
+      if (placed) setCart((items) => [...items, id])
+      else window.alert('Could not place the order. Sign in as a consumer, then try again.')
     }
   }
 

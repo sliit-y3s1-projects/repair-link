@@ -1,6 +1,6 @@
 # Repair Link MVP test runbook
 
-This file is the end-to-end smoke test for the four MVP areas. It uses seeded development actors; it does not expose or require the Neon database password.
+This file is the end-to-end smoke test for the four MVP areas. It does not expose or require the Neon database password.
 
 ## Start the applications
 
@@ -22,7 +22,13 @@ pnpm dev
 
 Open `http://localhost:5173/auth`. For this prototype, click **Open consumer**, **Open technician**, **Open seller**, or **Open admin**. The API base is `http://localhost:5000` (set `VITE_BACKEND_URL` in `frontend/.env` if different).
 
-## Seeded test actors
+## Demo login credentials
+
+Run `pnpm db:seed` after migrating. Every seeded account has this development-only password:
+
+```text
+RepairLink123!
+```
 
 | Role | Demo email | Actor ID |
 |---|---|---|
@@ -31,12 +37,12 @@ Open `http://localhost:5173/auth`. For this prototype, click **Open consumer**, 
 | Seller | seller@repairlink.local | 00000000-0000-4000-8000-000000000003 |
 | Admin | admin@repairlink.local | 00000000-0000-4000-8000-000000000004 |
 
-The current development API authenticates with request headers, not passwords. Example admin headers:
+Login and registration now return a signed access token. The older development headers are retained only for the role-preview buttons while developing. Example authenticated API call:
 
 ```bash
 BASE=http://localhost:5000/api/v1
-ADMIN_ID=00000000-0000-4000-8000-000000000004
-curl -H "x-dev-actor-id: $ADMIN_ID" -H "x-dev-actor-name: Repair Link Admin" -H "x-dev-actor-role: admin" "$BASE/categories"
+TOKEN=PASTE_TOKEN_RETURNED_BY_LOGIN
+curl -H "Authorization: Bearer $TOKEN" "$BASE/categories"
 ```
 
 ## Feature 1 — Repair requests, quotes, and booking
@@ -104,4 +110,4 @@ Expected result: all commands exit successfully. The frontend build may print Li
 
 ## Important development limitation
 
-The UI currently uses seeded role-preview actors so the MVP can be demonstrated before production authentication is selected. Before deployment, replace the `x-dev-actor-*` middleware with real session/JWT authentication and rotate any database credentials that were ever shared in shell history or chat.
+Registration, login, password hashing, and signed bearer-token authentication are now implemented. Password-reset email delivery is not implemented yet. Before deployment, set a strong `AUTH_TOKEN_SECRET`, remove development-header role preview, add token revocation/refresh handling, and rotate any database credentials that were ever shared in shell history or chat.

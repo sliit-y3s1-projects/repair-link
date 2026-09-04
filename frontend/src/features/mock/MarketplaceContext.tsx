@@ -80,7 +80,7 @@ type MarketplaceContextValue = {
   updateListingStock: (id: string, delta: number) => void
   toggleListingActive: (id: string) => void
   removeListing: (id: string) => void
-  placeOrder: (listingId: string, quantity: number) => void
+  placeOrder: (listingId: string, quantity: number) => Promise<boolean>
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null)
@@ -177,13 +177,14 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     updateListingStock: async (id, delta) => { const item = listings.find(l => l.id === id); if (!item) return; try { await updatePartListing(id, { quantity: Math.max(0, item.stock + delta) }); setListings(current => current.map(l => l.id === id ? { ...l, stock: Math.max(0, l.stock + delta) } : l)) } catch { return } },
     toggleListingActive: async (id) => { const item = listings.find(l => l.id === id); if (!item) return; try { await updatePartListing(id, { isActive: !item.active }); setListings(current => current.map(l => l.id === id ? { ...l, active: !l.active } : l)) } catch { return } },
     removeListing: async (id) => { try { await archivePartListing(id); setListings(current => current.filter(l => l.id !== id)) } catch { return } },
-    placeOrder: (listingId, quantity) => {
+    placeOrder: async (listingId, quantity) => {
       const listing = listings.find(l => l.id === listingId)
-      if (!listing || listing.stock < quantity) return
-      void placePartOrder(listingId, quantity).then(() => {
+      if (!listing || listing.stock < quantity) return false
+      try {
+        await placePartOrder(listingId, quantity)
         setListings(current => current.map(l => l.id === listingId ? { ...l, stock: Math.max(0, l.stock - quantity) } : l))
-      }).catch(() => { /* Keep the UI stable; the API error is handled by the next UI pass. */ })
-      return
+        return true
+      } catch { return false }
     },
   }), [listings, notifications, orders, quotes, requests])
 

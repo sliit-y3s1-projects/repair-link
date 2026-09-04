@@ -10,6 +10,7 @@ import adminRouter from './src/features/moderation/admin.routes';
 import reviewsRouter from './src/features/reviews/reviews.routes';
 import sellerProfileRouter from './src/features/profiles/seller.routes';
 import reportsRouter from './src/features/moderation/reports.routes';
+import authRouter from './src/features/auth/auth.routes';
 import { errorHandler, notFoundHandler } from './src/shared/http';
 
 export const app = express();
@@ -19,6 +20,7 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 // Mount feature routers
+app.use(authRouter);
 app.use(technicianProfileRouter);
 app.use(partsRouter);
 app.use(aiRepairRouter);
