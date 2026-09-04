@@ -49,7 +49,12 @@ export function Header() {
           </NavLink>
         </nav>
         <div className="hidden items-center gap-4 md:flex">
-          <button className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('repairlink:open-ai-chat'))}
+            className="rounded-full px-3 py-2 text-sm font-medium hover:bg-[#f7f7f7]"
+            aria-label="Open AI repair help"
+          >
             Help
           </button>
           <Link to="/dashboard" className="flex items-center gap-2 rounded-full border border-[#ddd] py-1.5 pl-3 pr-1.5 shadow-sm hover:shadow-md">

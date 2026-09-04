@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
 import { AuthProvider } from '@/features/auth/AuthContext'
 import { AiRepairChat } from '@/features/ai-repair-assistant/AiRepairChat'
+import { AiAssistantTour } from '@/features/ai-repair-assistant/AiAssistantTour'
 import { RoleGuard } from '@/features/auth/RoleGuard'
 import { AdminWorkspace } from '@/features/dashboard/AdminWorkspace'
 import { ConsumerWorkspace } from '@/features/dashboard/ConsumerWorkspace'
@@ -27,6 +28,7 @@ export default function App() {
       <MarketplaceProvider>
       <ApplicationRoutes />
       <AiRepairChat />
+      <AiAssistantTour />
       </MarketplaceProvider>
       </AuthProvider>
     </BrowserRouter>

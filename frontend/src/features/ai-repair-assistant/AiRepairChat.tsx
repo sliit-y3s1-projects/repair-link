@@ -37,6 +37,12 @@ export function AiRepairChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  useEffect(() => {
+    const openAssistant = () => setOpen(true)
+    window.addEventListener('repairlink:open-ai-chat', openAssistant)
+    return () => window.removeEventListener('repairlink:open-ai-chat', openAssistant)
+  }, [])
+
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmedQuestion = question.trim()
@@ -174,6 +180,7 @@ export function AiRepairChat() {
       )}
 
       <button
+        data-tour="ai-repair-assistant"
         type="button"
         onClick={() => setOpen((current) => !current)}
         className="group relative ml-auto flex size-16 items-center justify-center overflow-visible rounded-full border-2 border-white bg-[#176b4d] text-white shadow-[0_12px_35px_rgba(23,107,77,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#12583f] hover:shadow-[0_16px_40px_rgba(23,107,77,0.45)] focus:outline-none focus:ring-2 focus:ring-[#176b4d] focus:ring-offset-2"
