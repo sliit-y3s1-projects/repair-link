@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RiMenuLine } from "@remixicon/react";
+import { RiMenuLine, RiToolsLine } from "@remixicon/react";
 import { Link, NavLink } from "react-router";
 
 export function Header() {
@@ -13,20 +13,12 @@ export function Header() {
           className="flex items-center gap-2.5"
           aria-label="Repair Link home"
         >
-<<<<<<< Updated upstream
-          <img
-            src="/favicon.svg"
-            alt="Repair-Link logo"
-            className="size-9 rounded-xl object-cover shadow-sm"
-          />
-=======
           <span className="grid size-9 place-items-center rounded-xl bg-[#157a5a] text-white">
             <RiToolsLine className="size-5" />
           </span>
           <span className="text-[21px] font-bold tracking-[-.05em] text-[#157a5a]">
             repairlink
           </span>
->>>>>>> Stashed changes
         </Link>
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 text-sm font-medium md:flex">
           <NavLink
