@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { ApiError, sendError } from '../features/technician-profile/shared/api-response';
+import { ApiError, sendError } from './api-response';
 
 export const notFoundHandler = (req: Request, res: Response) =>
   sendError(res, 404, 'Route not found', [`${req.method} ${req.originalUrl}`]);

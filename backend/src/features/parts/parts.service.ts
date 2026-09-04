@@ -5,7 +5,7 @@ import {
   UpdatePartListingInput,
 } from './parts.schema';
 import { PartListing, PartOrder, partsRepository } from './parts.repository';
-import { ApiError } from '../technician-profile/shared/api-response';
+import { ApiError } from '../../shared/api-response';
 
 export interface DevActor {
   id: string;

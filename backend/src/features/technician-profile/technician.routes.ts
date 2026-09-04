@@ -22,7 +22,7 @@ import {
   updateTechnicianProfileController,
   updateTechnicianServiceController,
   upsertTechnicianAvailabilityController,
-} from '../controllers/technician.controller';
+} from './technician.controller';
 
 const technicianProfileRouter = express.Router();
 

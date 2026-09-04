@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import technicianProfileRouter from './src/features/technician-profile';
+import technicianProfileRouter from './src/features/technician-profile/technician.routes';
 import partsRouter from './src/features/parts/parts.routes';
 import { errorHandler, notFoundHandler } from './src/shared/http';
 

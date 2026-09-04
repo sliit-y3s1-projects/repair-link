@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { technicianService } from '../services/technician.service';
-import { ApiError, sendError, sendSuccess } from '../shared/api-response';
+import { technicianService } from './technician.service';
+import { ApiError, sendError, sendSuccess } from '../../shared/api-response';
 import {
   addCategorySchema,
   addPortfolioItemSchema,
@@ -14,7 +14,7 @@ import {
   updateServiceSchema,
   updateTechnicianProfileSchema,
   upsertAvailabilitySchema,
-} from '../validation/technician.validation';
+} from './technician.schema';
 
 const getValidationErrors = (error: z.ZodError) =>
   error.issues.map((issue) => issue.message);

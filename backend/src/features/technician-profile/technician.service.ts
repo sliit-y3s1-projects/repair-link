@@ -1,5 +1,5 @@
-import { ApiError } from '../shared/api-response';
-import { technicianRepository } from '../repositories/technician.repository';
+import { ApiError } from '../../shared/api-response';
+import { technicianRepository } from './technician.repository';
 import {
   AvailabilityItem,
   CategoryItem,
@@ -9,7 +9,7 @@ import {
   TechnicianDiscoveryFilters,
   TechnicianProfile,
   TechnicianPublicProfile,
-} from '../models/technician.types';
+} from './technician.types';
 
 const ensureTechnicianExists = (technicianId: string) => {
   const profile = technicianRepository.getById(technicianId);
