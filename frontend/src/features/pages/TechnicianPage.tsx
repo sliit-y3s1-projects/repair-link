@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { RiCheckLine, RiSendPlaneLine } from '@remixicon/react'
+import { PageHeader } from './PageHeader'
+
+export function TechnicianPage() {
+  const [quoted, setQuoted] = useState(false)
+  return <><PageHeader eyebrow="Repairer workspace" title="Manage your repair work"><p className="mt-3 text-sm text-[#717171]">Review new requests, send quotes, update jobs, and build your reputation.</p></PageHeader><section className="mx-auto grid max-w-6xl gap-6 px-6 py-9 lg:grid-cols-[1fr_1fr] lg:px-10"><article className="rounded-xl border border-[#ddd] p-6"><p className="text-xs font-bold uppercase tracking-wide text-[#717171]">New request · 1.4 km away</p><h2 className="mt-3 text-lg font-semibold">iPhone 13 cracked screen</h2><p className="mt-2 text-sm text-[#717171]">Customer prefers a shop visit this weekend. Budget: Rs. 8,000.</p><input className="mt-5 w-full rounded-lg border border-[#ddd] p-3 text-sm" defaultValue="Rs. 6,500" /><button onClick={() => setQuoted(true)} className="mt-3 flex items-center gap-2 rounded-lg bg-[#222] px-4 py-3 text-sm font-semibold text-white"><RiSendPlaneLine className="size-4" /> {quoted ? 'Quote sent' : 'Send quote'}</button></article><article className="rounded-xl bg-[#f7f7f7] p-6"><h2 className="text-lg font-semibold">Today’s jobs</h2><div className="mt-5 space-y-4 text-sm"><p className="flex items-center justify-between"><span>10:00 · Screen repair</span><span className="rounded-full bg-white px-2 py-1 text-xs">Booked</span></p><p className="flex items-center justify-between"><span>15:30 · Laptop diagnostic</span><span className="rounded-full bg-[#dff3e4] px-2 py-1 text-xs text-[#008a05]"><RiCheckLine className="inline size-3" /> Completed</span></p></div></article></section></>
+}
