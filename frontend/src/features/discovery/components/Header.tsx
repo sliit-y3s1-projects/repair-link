@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RiMenuLine, RiToolsLine } from "@remixicon/react";
+import { RiMenuLine } from "@remixicon/react";
 import { Link, NavLink } from "react-router";
 
 export function Header() {
@@ -13,9 +13,11 @@ export function Header() {
           className="flex items-center gap-2.5"
           aria-label="Repair Link home"
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-[#157a5a] text-white">
-            <RiToolsLine className="size-5" />
-          </span>
+          <img
+            src="/logo.svg"
+            alt="Repair-Link logo"
+            className="size-9 rounded-xl object-cover shadow-sm"
+          />
           <span className="text-[21px] font-bold tracking-[-.05em] text-[#157a5a]">
             repairlink
           </span>

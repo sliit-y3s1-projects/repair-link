@@ -36,6 +36,8 @@ export const UpdatePartListingSchema = z.object({
   images: z.array(z.string().url()).optional(),
   deliveryOptions: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one field must be provided for update',
 });
 
 export type UpdatePartListingInput = z.infer<typeof UpdatePartListingSchema>;
@@ -49,7 +51,10 @@ export const SearchPartsQuerySchema = z.object({
   maxPrice: z.coerce.number().min(0).optional(),
   inStockOnly: z.enum(['true', 'false']).transform((v) => v === 'true').optional(),
   sellerId: z.string().optional(),
-});
+}).refine(
+  ({ minPrice, maxPrice }) => minPrice === undefined || maxPrice === undefined || minPrice <= maxPrice,
+  { message: 'Minimum price cannot exceed maximum price', path: ['maxPrice'] },
+);
 
 export type SearchPartsQuery = z.infer<typeof SearchPartsQuerySchema>;
 
