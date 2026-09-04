@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { RiArrowRightLine, RiCheckLine, RiClipboardLine, RiFlagLine, RiInboxLine, RiNotification3Line } from '@remixicon/react'
 import { RoleLayout } from '@/features/dashboard/RoleLayout'
 import { repairStatusLabel, type RepairStatus, useMarketplace } from '@/features/mock/MarketplaceContext'
+import { createCategory, deleteCategory, listAdminReports, listCategories, resolveAdminReport, updateCategory, verifyTechnician, type ApiCategory } from '@/lib/api'
 
 const statusStyles: Record<RepairStatus, string> = {
   requested: 'bg-[#f0f2f1] text-[#536057]', quoted: 'bg-[#eef5fb] text-[#2e6590]', booked: 'bg-[#eaf5ed] text-[#286343]', in_progress: 'bg-[#fff4e4] text-[#9a6518]', waiting_for_parts: 'bg-[#f5effb] text-[#704b98]', completed: 'bg-[#e8f5ed] text-[#277044]', cancelled: 'bg-[#f5eeee] text-[#994848]', disputed: 'bg-[#fbefeb] text-[#9a4e35]',
@@ -176,8 +177,13 @@ export function SellerOrdersPage() {
 export function AdminQueuesPage() {
   const [verified, setVerified] = useState(false)
   const [resolved, setResolved] = useState(false)
+  const [reports, setReports] = useState<Array<{ id: string; status: string; reason: string; targetType: string; targetId: string }>>([])
+  const [categories, setCategories] = useState<ApiCategory[]>([])
+  const [categoryName, setCategoryName] = useState('')
   const { requests, updateRepairStatus } = useMarketplace()
   const disputedRequests = requests.filter(r => r.status === 'disputed')
+  useEffect(() => { listAdminReports().then(setReports).catch(() => undefined); listCategories().then(setCategories).catch(() => undefined) }, [])
+  const addCategory = async () => { const name = categoryName.trim(); if (!name) return; try { const created = await createCategory({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }); setCategories(current => [...current, created]); setCategoryName('') } catch { return } }
   return (
     <RoleLayout title="Operations queue" description="Review verification, moderation, disputes, and actions that keep the marketplace trusted.">
       <div className="grid gap-6 lg:grid-cols-2">
@@ -189,7 +195,7 @@ export function AdminQueuesPage() {
           <div className="p-5">
             <p className="font-semibold">Mobile Medic</p>
             <p className="mt-1 text-sm text-[#6c796f]">Apple & Android repairs · Colombo · Documents submitted</p>
-            <button onClick={() => setVerified(true)} className="mt-5 rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">{verified ? 'Verified' : 'Verify profile'}</button>
+            <button onClick={async () => { try { await verifyTechnician('00000000-0000-4000-8000-000000000002', 'verified'); setVerified(true) } catch { return } }} className="mt-5 rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">{verified ? 'Verified' : 'Verify profile'}</button>
           </div>
         </article>
         <article className="rounded-xl border border-[#eadfd9] bg-white">
@@ -226,6 +232,16 @@ export function AdminQueuesPage() {
             </div>
           </article>
         )}
+        {reports.length > 0 && (
+          <article className="rounded-xl border border-[#dfe6e0] bg-white lg:col-span-2">
+            <div className="border-b border-[#e8ede9] bg-[#f8faf8] px-5 py-4"><p className="text-xs font-bold uppercase tracking-[.12em] text-[#5c806a]">Reports</p><h2 className="mt-1 font-semibold">Community reports</h2></div>
+            <div className="divide-y divide-[#edf0ed]">{reports.map(report => <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"><div><p className="font-semibold">{report.reason}</p><p className="mt-1 text-xs text-[#748178]">{report.targetType} · {report.targetId} · {report.status}</p></div>{report.status !== 'resolved' && report.status !== 'dismissed' && <button onClick={async () => { await resolveAdminReport(report.id, 'resolved', 'Reviewed by admin'); setReports(current => current.map(item => item.id === report.id ? { ...item, status: 'resolved' } : item)) }} className="rounded-lg bg-[#157a5a] px-3 py-2 text-xs font-semibold text-white">Resolve</button>}</div>)}</div>
+          </article>
+        )}
+        <article className="rounded-xl border border-[#dfe6e0] bg-white lg:col-span-2">
+          <div className="border-b border-[#e8ede9] bg-[#f8faf8] px-5 py-4"><p className="text-xs font-bold uppercase tracking-[.12em] text-[#5c806a]">Catalog administration</p><h2 className="mt-1 font-semibold">Device categories</h2><p className="mt-1 text-sm text-[#748178]">Create, rename, activate, or remove categories used by repair requests.</p></div>
+          <div className="p-5"><div className="flex gap-2"><input value={categoryName} onChange={event => setCategoryName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void addCategory() } }} placeholder="New category name" className="flex-1 rounded-lg border border-[#d6ded8] px-3 py-2.5 text-sm" /><button onClick={() => void addCategory()} className="rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">Create</button></div><div className="mt-4 divide-y divide-[#edf0ed]">{categories.map(category => <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-semibold">{category.name}</p><p className="text-xs text-[#748178]">{category.slug} · {category.isActive ? 'Active' : 'Inactive'}</p></div><div className="flex gap-2"><button onClick={async () => { const name = window.prompt('Category name', category.name)?.trim(); if (!name || name === category.name) return; const updated = await updateCategory(category.id, { name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }); setCategories(current => current.map(item => item.id === category.id ? updated : item)) }} className="rounded-lg border border-[#c9d4cc] px-3 py-2 text-xs font-semibold">Rename</button><button onClick={async () => { const next = !category.isActive; await updateCategory(category.id, { isActive: next }); setCategories(current => current.map(item => item.id === category.id ? { ...item, isActive: next } : item)) }} className="rounded-lg border border-[#c9d4cc] px-3 py-2 text-xs font-semibold">{category.isActive ? 'Deactivate' : 'Activate'}</button><button onClick={async () => { if (!window.confirm(`Delete ${category.name}?`)) return; await deleteCategory(category.id); setCategories(current => current.filter(item => item.id !== category.id)) }} className="rounded-lg border border-[#e4c7c1] px-3 py-2 text-xs font-semibold text-[#a04f43]">Delete</button></div></div>)}</div></div>
+        </article>
         <article className="rounded-xl bg-[#183f2f] p-6 text-white lg:col-span-2">
           <p className="text-xs font-bold uppercase tracking-[.12em] text-[#aed3ba]">Impact rules</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

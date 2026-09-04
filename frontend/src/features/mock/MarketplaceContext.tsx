@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { acceptRepairQuote, archivePartListing, createPartListing, createRepairQuote, createRepairRequest, listParts, listRepairRequests, placePartOrder, updatePartListing, updatePartOrderStatus, updateRepairStatus as updateRepairStatusApi } from '@/lib/api'
 
 export type RepairStatus = 'requested' | 'quoted' | 'booked' | 'in_progress' | 'waiting_for_parts' | 'completed' | 'cancelled' | 'disputed'
 export type QuoteState = 'sent' | 'accepted' | 'rejected'
@@ -64,7 +66,7 @@ type MarketplaceContextValue = {
   notifications: Notification[]
   completedRepairs: number
   totalImpactPoints: number
-  createRequest: (input: Omit<RepairRequest, 'id' | 'status' | 'createdAt'>) => string
+  createRequest: (input: Omit<RepairRequest, 'id' | 'status' | 'createdAt'>) => Promise<string>
   deleteRequest: (id: string) => void
   cancelRequest: (id: string) => void
   acceptQuote: (quoteId: string) => void
@@ -103,6 +105,24 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     { id: 'note-booking', title: 'Booking confirmed', body: 'Your screen repair is tomorrow at 10:00 AM.', read: false, href: '/consumer/repairs/repair-iphone' },
   ])
 
+  useEffect(() => {
+    let active = true
+    listParts().then(({ parts }) => {
+      if (!active) return
+      setListings(parts.map((part) => ({ id: part.id, name: part.name, sku: part.sku, stock: part.quantity, price: part.price, condition: part.condition[0].toUpperCase() + part.condition.slice(1) as Listing['condition'], active: part.isActive })))
+    }).catch(() => { /* The prototype seed remains available while the API is offline. */ })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    listRepairRequests().then((rows) => {
+      if (!active) return
+      setRequests(rows.map((row) => ({ id: row.id, title: `${row.deviceModel ?? row.deviceBrand ?? 'Device'} repair request`, device: `${row.deviceBrand ?? 'Device'} · ${row.deviceModel ?? ''}`, issue: row.issueDescription, location: row.locationText, preferredTime: 'Scheduled with technician', method: row.preferredMethod, budget: Number(row.budgetAmount ?? 0), status: row.status, createdAt: 'From API' })))
+    }).catch(() => { /* Prototype data remains available while the API is unavailable. */ })
+    return () => { active = false }
+  }, [])
+
   const value = useMemo<MarketplaceContextValue>(() => ({
     requests,
     quotes,
@@ -110,28 +130,42 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     notifications,
     completedRepairs: requests.filter(r => r.status === 'completed').length,
     totalImpactPoints: requests.filter(r => r.status === 'completed').length * 120,
-    createRequest: (input) => {
+    createRequest: async (input) => {
       const id = `repair-${Date.now()}`
+      const categoryId = input.device.toLowerCase().includes('laptop') ? '00000000-0000-4000-8000-000000000011' : '00000000-0000-4000-8000-000000000010'
+      try {
+        const created = await createRepairRequest({ categoryId, issueDescription: input.issue, preferredMethod: input.method.toLowerCase().includes('pickup') ? 'pickup_dropoff' : input.method.toLowerCase().includes('on-site') ? 'on_site' : 'shop_visit', locationText: input.location, budgetAmount: input.budget || undefined })
+        return created.id
+      } catch { /* Keep the prototype fallback when the API is unavailable. */ }
       setRequests((current) => [{ ...input, id, status: 'requested', createdAt: 'Just now' }, ...current])
       setNotifications((current) => [{ id: `note-${id}`, title: 'Request submitted', body: 'Matching repairers can now send you quotes.', read: false, href: `/consumer/repairs/${id}` }, ...current])
       return id
     },
     deleteRequest: (id) => setRequests((current) => current.filter(r => r.id !== id)),
     cancelRequest: (id) => setRequests((current) => current.map(r => r.id === id ? { ...r, status: 'cancelled' } : r)),
-    acceptQuote: (quoteId) => {
+    acceptQuote: async (quoteId) => {
       const selected = quotes.find((quote) => quote.id === quoteId)
       if (!selected) return
+      try { await acceptRepairQuote(selected.requestId, quoteId) } catch { return }
       setQuotes((current) => current.map((quote) => quote.requestId === selected.requestId ? { ...quote, state: quote.id === quoteId ? 'accepted' : 'rejected' } : quote))
       setRequests((current) => current.map((request) => request.id === selected.requestId ? { ...request, status: 'booked', technician: selected.technician, scheduledFor: 'Saturday, 11:00 AM' } : request))
       setNotifications((current) => [{ id: `note-booking-${selected.requestId}`, title: 'Booking confirmed', body: `Your booking with ${selected.technician} is confirmed.`, read: false, href: `/consumer/repairs/${selected.requestId}` }, ...current])
     },
-    updateRepairStatus: (id, status) => setRequests((current) => current.map((request) => request.id === id ? { ...request, status } : request)),
-    createQuote: (requestId, amount) => {
+    updateRepairStatus: async (id, status) => {
+      try { await updateRepairStatusApi(id, status) } catch { return }
+      setRequests((current) => current.map((request) => request.id === id ? { ...request, status } : request))
+    },
+    createQuote: async (requestId, amount) => {
+      try { await createRepairQuote(requestId, amount) } catch { return }
       const id = `quote-${Date.now()}`
       setQuotes((current) => [{ id, requestId, technician: 'Kamal\u2019s Device Care', rating: 4.91, amount, duration: '2\u20133 hours', message: 'Quote sent from the technician workspace.', state: 'sent' }, ...current])
       setRequests((current) => current.map((request) => request.id === requestId ? { ...request, status: 'quoted' } : request))
     },
-    updateOrderStatus: (id, status) => setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order)),
+    updateOrderStatus: async (id, status) => {
+      const apiStatus = status === 'new' ? 'confirmed' : status === 'packed' ? 'packed' : status === 'delivered' ? 'completed' : status
+      try { await updatePartOrderStatus(id, apiStatus) } catch { return }
+      setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order))
+    },
     createOrder: (part, total) => {
       const id = `order-${Date.now()}`
       setOrders((current) => [{ id, part, buyer: 'Chamal Senarathna', quantity: 1, total, status: 'new' }, ...current])
@@ -139,17 +173,17 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     },
     markNotificationRead: (id) => setNotifications((current) => current.map((notification) => notification.id === id ? { ...notification, read: true } : notification)),
     listings,
-    addListing: (listing) => setListings(current => [...current, { ...listing, id: `listing-${Date.now()}` }]),
-    updateListingStock: (id, delta) => setListings(current => current.map(l => l.id === id ? { ...l, stock: Math.max(0, l.stock + delta) } : l)),
-    toggleListingActive: (id) => setListings(current => current.map(l => l.id === id ? { ...l, active: !l.active } : l)),
-    removeListing: (id) => setListings(current => current.filter(l => l.id !== id)),
+    addListing: async (listing) => { try { const created = await createPartListing({ name: listing.name, sku: listing.sku, price: listing.price, quantity: listing.stock, condition: listing.condition }); setListings(current => [...current, { ...listing, id: created.id }]) } catch { return } },
+    updateListingStock: async (id, delta) => { const item = listings.find(l => l.id === id); if (!item) return; try { await updatePartListing(id, { quantity: Math.max(0, item.stock + delta) }); setListings(current => current.map(l => l.id === id ? { ...l, stock: Math.max(0, l.stock + delta) } : l)) } catch { return } },
+    toggleListingActive: async (id) => { const item = listings.find(l => l.id === id); if (!item) return; try { await updatePartListing(id, { isActive: !item.active }); setListings(current => current.map(l => l.id === id ? { ...l, active: !l.active } : l)) } catch { return } },
+    removeListing: async (id) => { try { await archivePartListing(id); setListings(current => current.filter(l => l.id !== id)) } catch { return } },
     placeOrder: (listingId, quantity) => {
       const listing = listings.find(l => l.id === listingId)
       if (!listing || listing.stock < quantity) return
-      const id = `order-${Date.now()}`
-      setOrders(current => [{ id, part: listing.name, buyer: 'Chamal Senarathna', quantity, total: listing.price * quantity, status: 'new' }, ...current])
-      setListings(current => current.map(l => l.id === listingId ? { ...l, stock: Math.max(0, l.stock - quantity) } : l))
-      setNotifications(current => [{ id: `note-${id}`, title: 'Parts order placed', body: `${listing.name} × ${quantity} added to your orders.`, read: false, href: '/seller/orders' }, ...current])
+      void placePartOrder(listingId, quantity).then(() => {
+        setListings(current => current.map(l => l.id === listingId ? { ...l, stock: Math.max(0, l.stock - quantity) } : l))
+      }).catch(() => { /* Keep the UI stable; the API error is handled by the next UI pass. */ })
+      return
     },
   }), [listings, notifications, orders, quotes, requests])
 

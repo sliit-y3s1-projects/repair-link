@@ -73,6 +73,8 @@ function ApplicationRoutes() {
         <Route path="/admin" element={<DashboardRedirect />} />
         <Route path="/admin/dashboard" element={<RoleGuard roles={['admin']}><AdminWorkspace /></RoleGuard>} />
         <Route path="/admin/queue" element={<RoleGuard roles={['admin']}><AdminQueuesPage /></RoleGuard>} />
+        <Route path="/admin/management" element={<RoleGuard roles={['admin']}><AdminQueuesPage /></RoleGuard>} />
+        <Route path="/admin/categories" element={<RoleGuard roles={['admin']}><AdminQueuesPage /></RoleGuard>} />
         <Route path="/admin/messages" element={<RoleGuard roles={['admin']}><MessagesPage /></RoleGuard>} />
         <Route path="/admin/notifications" element={<RoleGuard roles={['admin']}><NotificationsPage /></RoleGuard>} />
         <Route path="*" element={<DiscoveryPage />} />

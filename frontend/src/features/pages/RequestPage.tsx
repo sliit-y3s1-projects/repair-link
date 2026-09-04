@@ -152,12 +152,12 @@ export function RequestPage() {
               Back
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (step !== 3) {
                   setStep(step + 1);
                   return;
                 }
-                const requestId = createRequest({
+                const requestId = await createRequest({
                   title: `${device} repair request`,
                   device,
                   issue: issue || "No description provided.",

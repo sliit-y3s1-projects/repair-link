@@ -1,0 +1,15 @@
+import express, { type Request, type Response } from 'express';
+import { and, desc, eq, or } from 'drizzle-orm';
+import { db } from '../../db';
+import { partOrders, repairRequests, reviews } from '../../db/schema';
+import { requireDevelopmentActor } from '../../middleware/development-actor';
+import { ApiError, sendError, sendSuccess } from '../../shared/api-response';
+import { reviewSchema, reviewUpdateSchema } from './reviews.schema';
+const router = express.Router();
+const handle = (fn: (req: Request) => Promise<unknown>) => async (req: Request, res: Response) => { try { return sendSuccess(res, 200, 'OK', await fn(req)); } catch (e) { return sendError(res, e instanceof ApiError ? e.statusCode : 400, e instanceof Error ? e.message : 'Review request failed'); } };
+const actor = (req: Request) => { if (!req.devActor) throw new ApiError(401, 'Development actor is required'); return req.devActor; };
+router.get('/api/v1/reviews', handle(async (req) => db.select().from(reviews).where(req.query.subjectId ? eq(reviews.subjectId, String(req.query.subjectId)) : undefined).orderBy(desc(reviews.createdAt))));
+router.post('/api/v1/reviews', requireDevelopmentActor, handle(async (req) => { const a = actor(req); const input = reviewSchema.parse(req.body); if (input.repairRequestId) { const [r] = await db.select().from(repairRequests).where(and(eq(repairRequests.id, input.repairRequestId), eq(repairRequests.status, 'completed'), or(eq(repairRequests.consumerId, a.id)))); if (!r) throw new ApiError(403, 'You are not eligible to review this repair'); } if (input.partOrderId) { const [o] = await db.select().from(partOrders).where(and(eq(partOrders.id, input.partOrderId), eq(partOrders.buyerId, a.id), eq(partOrders.status, 'completed'))); if (!o) throw new ApiError(403, 'You are not eligible to review this order'); } const [row] = await db.insert(reviews).values({ ...input, authorId: a.id }).returning(); return row; }));
+router.patch('/api/v1/reviews/:id', requireDevelopmentActor, handle(async (req) => { const a = actor(req); const [row] = await db.update(reviews).set(reviewUpdateSchema.parse(req.body)).where(and(eq(reviews.id, req.params.id), eq(reviews.authorId, a.id))).returning(); if (!row) throw new ApiError(404, 'Review not found'); return row; }));
+router.delete('/api/v1/reviews/:id', requireDevelopmentActor, handle(async (req) => { const a = actor(req); const condition = a.role === 'admin' ? eq(reviews.id, req.params.id) : and(eq(reviews.id, req.params.id), eq(reviews.authorId, a.id)); const [row] = await db.delete(reviews).where(condition).returning({ id: reviews.id }); if (!row) throw new ApiError(404, 'Review not found'); return row; }));
+export default router;

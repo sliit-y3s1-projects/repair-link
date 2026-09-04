@@ -5,32 +5,20 @@ import {
   CreatePartListingSchema,
   SearchPartsQuerySchema,
   UpdatePartListingSchema,
+  OrderStatusEnum,
 } from './parts.schema';
-import { DevActor, partsService } from './parts.service';
+import { partsService } from './parts.service';
 import { ApiError, sendError, sendSuccess } from '../../shared/api-response';
 
 const getValidationErrors = (error: z.ZodError) =>
   error.issues.map((issue) => issue.message);
 
-// Helper to extract development actor per GUIDE.md
-export const extractDevActor = (req: Request): DevActor => {
-  const actorHeader = req.headers['x-actor-role'] as string;
-  const actorIdHeader = req.headers['x-actor-id'] as string;
-  const actorNameHeader = req.headers['x-actor-name'] as string;
-  const storeNameHeader = req.headers['x-store-name'] as string;
-
-  const validRoles = ['consumer', 'technician', 'seller', 'admin'] as const;
-  const role = validRoles.find((r) => r === actorHeader) || 'consumer';
-
-  return {
-    id: actorIdHeader || (role === 'seller' ? 'seller_colombo_01' : 'consumer_kandy_01'),
-    name: actorNameHeader || (role === 'seller' ? 'Ruwan Perera' : 'Nimal Fernando'),
-    role,
-    storeName: storeNameHeader || (role === 'seller' ? 'Pettah Tech Spares Hub' : undefined),
-  };
+const actorFor = (req: Request) => {
+  if (!req.devActor) throw new ApiError(401, 'Development actor is required');
+  return req.devActor;
 };
 
-export const searchPartsController = (req: Request, res: Response) => {
+export const searchPartsController = async (req: Request, res: Response) => {
   try {
     const parseResult = SearchPartsQuerySchema.safeParse(req.query);
     if (!parseResult.success) {
@@ -42,7 +30,7 @@ export const searchPartsController = (req: Request, res: Response) => {
       );
     }
 
-    const results = partsService.searchParts(parseResult.data);
+    const results = await partsService.searchParts(parseResult.data);
     return sendSuccess(res, 200, 'Spare parts retrieved successfully', {
       total: results.length,
       parts: results,
@@ -55,10 +43,10 @@ export const searchPartsController = (req: Request, res: Response) => {
   }
 };
 
-export const getPartByIdController = (req: Request, res: Response) => {
+export const getPartByIdController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const part = partsService.getPartById(id);
+    const part = await partsService.getPartById(id);
     return sendSuccess(res, 200, 'Spare part details retrieved successfully', part);
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -68,7 +56,7 @@ export const getPartByIdController = (req: Request, res: Response) => {
   }
 };
 
-export const createPartListingController = (req: Request, res: Response) => {
+export const createPartListingController = async (req: Request, res: Response) => {
   try {
     const parseResult = CreatePartListingSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -80,8 +68,8 @@ export const createPartListingController = (req: Request, res: Response) => {
       );
     }
 
-    const actor = extractDevActor(req);
-    const created = partsService.createListing(parseResult.data, actor);
+    const actor = actorFor(req);
+    const created = await partsService.createListing(parseResult.data, actor);
     return sendSuccess(res, 201, 'Spare part listing published successfully', created);
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -91,7 +79,7 @@ export const createPartListingController = (req: Request, res: Response) => {
   }
 };
 
-export const updatePartListingController = (req: Request, res: Response) => {
+export const updatePartListingController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const parseResult = UpdatePartListingSchema.safeParse(req.body);
@@ -104,8 +92,8 @@ export const updatePartListingController = (req: Request, res: Response) => {
       );
     }
 
-    const actor = extractDevActor(req);
-    const updated = partsService.updateListing(id, parseResult.data, actor);
+    const actor = actorFor(req);
+    const updated = await partsService.updateListing(id, parseResult.data, actor);
     return sendSuccess(res, 200, 'Spare part listing updated successfully', updated);
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -115,7 +103,12 @@ export const updatePartListingController = (req: Request, res: Response) => {
   }
 };
 
-export const createOrderController = (req: Request, res: Response) => {
+export const deletePartListingController = async (req: Request, res: Response) => {
+  try { return sendSuccess(res, 200, 'Spare part listing archived successfully', await partsService.removeListing(req.params.id, actorFor(req))); }
+  catch (err: unknown) { if (err instanceof ApiError) return sendError(res, err.statusCode, err.message, err.errors); return sendError(res, 500, 'Internal server error while archiving listing'); }
+};
+
+export const createOrderController = async (req: Request, res: Response) => {
   try {
     const parseResult = CreateOrderSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -127,8 +120,8 @@ export const createOrderController = (req: Request, res: Response) => {
       );
     }
 
-    const buyer = extractDevActor(req);
-    const order = partsService.createOrder(parseResult.data, buyer);
+    const buyer = actorFor(req);
+    const order = await partsService.createOrder(parseResult.data, buyer);
     return sendSuccess(
       res,
       201,
@@ -143,11 +136,11 @@ export const createOrderController = (req: Request, res: Response) => {
   }
 };
 
-export const getOrderByIdController = (req: Request, res: Response) => {
+export const getOrderByIdController = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
-    const actor = extractDevActor(req);
-    const order = partsService.getOrderById(orderId, actor);
+    const actor = actorFor(req);
+    const order = await partsService.getOrderById(orderId, actor);
     return sendSuccess(res, 200, 'Order details retrieved successfully', order);
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -157,10 +150,10 @@ export const getOrderByIdController = (req: Request, res: Response) => {
   }
 };
 
-export const getMyOrdersController = (req: Request, res: Response) => {
+export const getMyOrdersController = async (req: Request, res: Response) => {
   try {
-    const actor = extractDevActor(req);
-    const orders = partsService.getMyOrders(actor);
+    const actor = actorFor(req);
+    const orders = await partsService.getMyOrders(actor);
     return sendSuccess(res, 200, 'Orders retrieved successfully', {
       role: actor.role,
       count: orders.length,
@@ -171,5 +164,17 @@ export const getMyOrdersController = (req: Request, res: Response) => {
       return sendError(res, err.statusCode, err.message, err.errors);
     }
     return sendError(res, 500, 'Internal server error while fetching orders');
+  }
+};
+
+export const updateOrderStatusController = async (req: Request, res: Response) => {
+  try {
+    const actor = actorFor(req);
+    const parsed = OrderStatusEnum.safeParse((req.body as Record<string, unknown>).status);
+    if (!parsed.success) return sendError(res, 400, 'Invalid order status');
+    return sendSuccess(res, 200, 'Order status updated successfully', await partsService.updateOrderStatus(req.params.orderId, parsed.data, actor));
+  } catch (err: unknown) {
+    if (err instanceof ApiError) return sendError(res, err.statusCode, err.message, err.errors);
+    return sendError(res, 500, 'Internal server error while updating order');
   }
 };
