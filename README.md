@@ -232,4 +232,4 @@ Recommended next milestones:
 
 ## Sustainability commitment
 
-Repair Link is built to make repair visible, accessible, and rewarding. By helping more devices remain useful for longer, the platform can reduce unnecessary electronic waste, extend product life, support local repair professionals, and encourage a more circular electronics economy.
+Repair Link is built to make repair visible, accessible, and rewarding across local communities. By helping more devices remain useful for longer, the platform can reduce unnecessary electronic waste, extend product life cycles, support local repair professionals, and encourage an active, circular electronics economy that protects the environment and reduces landfill burden.
