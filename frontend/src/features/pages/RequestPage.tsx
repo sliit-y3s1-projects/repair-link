@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RiArrowRightLine, RiCheckLine } from "@remixicon/react";
+import { RiArrowRightLine } from "@remixicon/react";
 import { PageHeader } from "./PageHeader";
 import { useNavigate } from "react-router";
 import { useMarketplace } from "@/features/mock/MarketplaceContext";
@@ -8,35 +8,15 @@ const steps = ["Device", "Issue", "Location", "Review"];
 
 export function RequestPage() {
   const [step, setStep] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
   const [device, setDevice] = useState("Phone");
+  const [issue, setIssue] = useState("");
+  const [method, setMethod] = useState("Shop visit");
+  const [location, setLocation] = useState("Colombo, Sri Lanka");
+  const [preferredTime, setPreferredTime] = useState("Any time");
+  const [budget, setBudget] = useState("");
   const { createRequest } = useMarketplace();
   const navigate = useNavigate();
 
-  if (submitted)
-    return (
-      <>
-        <PageHeader eyebrow="Repair request" title="Your request is live." />
-        <section className="mx-auto max-w-xl px-6 py-16 text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#dff3e4] text-[#008a05]">
-            <RiCheckLine className="size-7" />
-          </span>
-          <h2 className="mt-5 text-2xl font-semibold">
-            We’ll find the right repairers.
-          </h2>
-          <p className="mt-3 text-[#717171]">
-            Your request for a {device.toLowerCase()} repair has been shared
-            with verified repairers near Colombo.
-          </p>
-          <a
-            className="mt-7 inline-flex rounded-lg bg-[#222] px-5 py-3 text-sm font-semibold text-white"
-            href="/consumer/repairs"
-          >
-            View my repairs
-          </a>
-        </section>
-      </>
-    );
   return (
     <>
       <PageHeader eyebrow="Create a request" title="Tell us what needs fixing.">
@@ -81,14 +61,30 @@ export function RequestPage() {
           )}
           {step === 1 && (
             <>
-              <h2 className="text-xl font-semibold">What’s the issue?</h2>
+              <h2 className="text-xl font-semibold">What's the issue?</h2>
               <textarea
                 className="mt-5 min-h-32 w-full rounded-lg border border-[#ddd] p-3 text-sm"
-                defaultValue="My screen is cracked and the display flickers."
+                placeholder="Describe the problem with your device…"
+                value={issue}
+                onChange={(e) => setIssue(e.target.value)}
               />
               <p className="mt-3 text-sm text-[#717171]">
                 You can add photos after the request is created.
               </p>
+              <div className="mt-5">
+                <label className="block text-sm font-medium text-[#444]">
+                  Preferred repair method
+                </label>
+                <select
+                  className="mt-2 w-full rounded-lg border border-[#ddd] p-3 text-sm"
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value)}
+                >
+                  <option>Shop visit</option>
+                  <option>Pickup / drop-off</option>
+                  <option>On-site visit</option>
+                </select>
+              </div>
             </>
           )}
           {step === 2 && (
@@ -96,13 +92,25 @@ export function RequestPage() {
               <h2 className="text-xl font-semibold">Where and when?</h2>
               <input
                 className="mt-5 w-full rounded-lg border border-[#ddd] p-3 text-sm"
-                defaultValue="Colombo, Sri Lanka"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
               />
-              <select className="mt-3 w-full rounded-lg border border-[#ddd] p-3 text-sm">
+              <select
+                className="mt-3 w-full rounded-lg border border-[#ddd] p-3 text-sm"
+                value={preferredTime}
+                onChange={(e) => setPreferredTime(e.target.value)}
+              >
                 <option>Any time</option>
                 <option>Today</option>
                 <option>This weekend</option>
               </select>
+              <input
+                type="number"
+                className="mt-3 w-full rounded-lg border border-[#ddd] p-3 text-sm"
+                placeholder="Optional budget (Rs.)"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+              />
             </>
           )}
           {step === 3 && (
@@ -116,12 +124,22 @@ export function RequestPage() {
                   <dd className="font-semibold">{device}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt>Location</dt>
-                  <dd className="font-semibold">Colombo</dd>
+                  <dt>Issue</dt>
+                  <dd className="max-w-[60%] text-right font-semibold">
+                    {issue
+                      ? issue.length > 60
+                        ? issue.slice(0, 60) + "…"
+                        : issue
+                      : "No description provided."}
+                  </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt>Reply preference</dt>
-                  <dd className="font-semibold">In-app messages</dd>
+                  <dt>Location</dt>
+                  <dd className="font-semibold">{location}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Preferred time</dt>
+                  <dd className="font-semibold">{preferredTime}</dd>
                 </div>
               </dl>
             </>
@@ -142,12 +160,12 @@ export function RequestPage() {
                 const requestId = createRequest({
                   title: `${device} repair request`,
                   device,
-                  issue: "My screen is cracked and the display flickers.",
-                  location: "Colombo, Sri Lanka",
-                  preferredTime: "Any time",
-                  budget: 8000,
+                  issue: issue || "No description provided.",
+                  location,
+                  preferredTime,
+                  method,
+                  budget: budget ? Number(budget) : 0,
                 });
-                setSubmitted(true);
                 navigate(`/consumer/repairs/${requestId}`);
               }}
               className="flex items-center gap-2 rounded-lg bg-[#157a5a] px-5 py-3 text-sm font-semibold text-white"

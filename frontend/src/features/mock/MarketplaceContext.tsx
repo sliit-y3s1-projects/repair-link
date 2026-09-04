@@ -10,6 +10,7 @@ export type RepairRequest = {
   issue: string
   location: string
   preferredTime: string
+  method: string
   budget: number
   status: RepairStatus
   technician?: string
@@ -39,36 +40,64 @@ export type PartOrder = {
 
 export type Notification = { id: string; title: string; body: string; read: boolean; href: string }
 
+export type Listing = {
+  id: string
+  name: string
+  sku: string
+  stock: number
+  price: number
+  condition: 'New' | 'Compatible' | 'Refurbished' | 'Used'
+  active: boolean
+}
+
+const initialListings: Listing[] = [
+  { id: 'listing-oled', name: 'iPhone 13 OLED display', sku: 'IP13-OLED-BLK', stock: 12, price: 8500, condition: 'Compatible', active: true },
+  { id: 'listing-battery', name: 'MacBook Air M1 battery', sku: 'MBA-M1-BAT', stock: 4, price: 11900, condition: 'New', active: true },
+  { id: 'listing-samsung-port', name: 'Samsung A54 USB-C charging port', sku: 'SA54-USBC', stock: 8, price: 2800, condition: 'New', active: true },
+  { id: 'listing-dell-kbd', name: 'Dell Inspiron keyboard assembly', sku: 'DELL-KBD-INS', stock: 4, price: 6200, condition: 'Refurbished', active: true },
+]
+
 type MarketplaceContextValue = {
   requests: RepairRequest[]
   quotes: Quote[]
   orders: PartOrder[]
   notifications: Notification[]
+  completedRepairs: number
+  totalImpactPoints: number
   createRequest: (input: Omit<RepairRequest, 'id' | 'status' | 'createdAt'>) => string
+  deleteRequest: (id: string) => void
+  cancelRequest: (id: string) => void
   acceptQuote: (quoteId: string) => void
   updateRepairStatus: (id: string, status: RepairStatus) => void
   createQuote: (requestId: string, amount: number) => void
   updateOrderStatus: (id: string, status: PartOrder['status']) => void
   createOrder: (part: string, total: number) => void
   markNotificationRead: (id: string) => void
+  listings: Listing[]
+  addListing: (listing: Omit<Listing, 'id'>) => void
+  updateListingStock: (id: string, delta: number) => void
+  toggleListingActive: (id: string) => void
+  removeListing: (id: string) => void
+  placeOrder: (listingId: string, quantity: number) => void
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null)
 
 const initialRequests: RepairRequest[] = [
-  { id: 'repair-iphone', title: 'iPhone 13 cracked screen', device: 'Phone · iPhone 13', issue: 'Display flickers and has a crack in the top-right corner.', location: 'Colombo 03', preferredTime: 'Tomorrow morning', budget: 8000, status: 'booked', technician: 'Kamal’s Device Care', scheduledFor: 'Tomorrow, 10:00 AM', createdAt: 'Today' },
-  { id: 'repair-macbook', title: 'MacBook Air battery replacement', device: 'Laptop · MacBook Air', issue: 'Battery health is below 70% and the laptop shuts down unexpectedly.', location: 'Colombo 05', preferredTime: 'This weekend', budget: 14000, status: 'quoted', createdAt: 'Yesterday' },
+  { id: 'repair-iphone', title: 'iPhone 13 cracked screen', device: 'Phone · iPhone 13', issue: 'Display flickers and has a crack in the top-right corner.', location: 'Colombo 03', preferredTime: 'Tomorrow morning', method: 'Shop visit', budget: 8000, status: 'booked', technician: 'Kamal\u2019s Device Care', scheduledFor: 'Tomorrow, 10:00 AM', createdAt: 'Today' },
+  { id: 'repair-macbook', title: 'MacBook Air battery replacement', device: 'Laptop · MacBook Air', issue: 'Battery health is below 70% and the laptop shuts down unexpectedly.', location: 'Colombo 05', preferredTime: 'This weekend', method: 'Pickup', budget: 14000, status: 'quoted', createdAt: 'Yesterday' },
 ]
 
 const initialQuotes: Quote[] = [
-  { id: 'quote-kamal', requestId: 'repair-macbook', technician: 'Kamal’s Device Care', rating: 4.91, amount: 12500, duration: '2–3 hours', message: 'Compatible battery with a 90-day service warranty. Same-day fitting available.', state: 'sent' },
+  { id: 'quote-kamal', requestId: 'repair-macbook', technician: 'Kamal\u2019s Device Care', rating: 4.91, amount: 12500, duration: '2\u20133 hours', message: 'Compatible battery with a 90-day service warranty. Same-day fitting available.', state: 'sent' },
   { id: 'quote-fixright', requestId: 'repair-macbook', technician: 'FixRight Electronics', rating: 4.86, amount: 10900, duration: '1 business day', message: 'Includes battery diagnostics and disposal of the old battery.', state: 'sent' },
 ]
 
 export function MarketplaceProvider({ children }: { children: ReactNode }) {
+  const [listings, setListings] = useState<Listing[]>(initialListings)
   const [requests, setRequests] = useState(initialRequests)
   const [quotes, setQuotes] = useState(initialQuotes)
-  const [orders, setOrders] = useState<PartOrder[]>([{ id: 'order-1008', part: 'iPhone 13 OLED display', buyer: 'Kamal’s Device Care', quantity: 1, total: 8500, status: 'new' }])
+  const [orders, setOrders] = useState<PartOrder[]>([{ id: 'order-1008', part: 'iPhone 13 OLED display', buyer: 'Kamal\u2019s Device Care', quantity: 1, total: 8500, status: 'new' }])
   const [notifications, setNotifications] = useState<Notification[]>([
     { id: 'note-quote', title: 'Two new quotes', body: 'Compare quotes for your MacBook battery request.', read: false, href: '/consumer/repairs/repair-macbook' },
     { id: 'note-booking', title: 'Booking confirmed', body: 'Your screen repair is tomorrow at 10:00 AM.', read: false, href: '/consumer/repairs/repair-iphone' },
@@ -79,12 +108,16 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     quotes,
     orders,
     notifications,
+    completedRepairs: requests.filter(r => r.status === 'completed').length,
+    totalImpactPoints: requests.filter(r => r.status === 'completed').length * 120,
     createRequest: (input) => {
       const id = `repair-${Date.now()}`
       setRequests((current) => [{ ...input, id, status: 'requested', createdAt: 'Just now' }, ...current])
       setNotifications((current) => [{ id: `note-${id}`, title: 'Request submitted', body: 'Matching repairers can now send you quotes.', read: false, href: `/consumer/repairs/${id}` }, ...current])
       return id
     },
+    deleteRequest: (id) => setRequests((current) => current.filter(r => r.id !== id)),
+    cancelRequest: (id) => setRequests((current) => current.map(r => r.id === id ? { ...r, status: 'cancelled' } : r)),
     acceptQuote: (quoteId) => {
       const selected = quotes.find((quote) => quote.id === quoteId)
       if (!selected) return
@@ -95,7 +128,7 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     updateRepairStatus: (id, status) => setRequests((current) => current.map((request) => request.id === id ? { ...request, status } : request)),
     createQuote: (requestId, amount) => {
       const id = `quote-${Date.now()}`
-      setQuotes((current) => [{ id, requestId, technician: 'Kamal’s Device Care', rating: 4.91, amount, duration: '2–3 hours', message: 'Quote sent from the technician workspace.', state: 'sent' }, ...current])
+      setQuotes((current) => [{ id, requestId, technician: 'Kamal\u2019s Device Care', rating: 4.91, amount, duration: '2\u20133 hours', message: 'Quote sent from the technician workspace.', state: 'sent' }, ...current])
       setRequests((current) => current.map((request) => request.id === requestId ? { ...request, status: 'quoted' } : request))
     },
     updateOrderStatus: (id, status) => setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order)),
@@ -105,7 +138,20 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
       setNotifications((current) => [{ id: `note-${id}`, title: 'Parts order placed', body: `${part} has been added to your order history.`, read: false, href: '/consumer/dashboard' }, ...current])
     },
     markNotificationRead: (id) => setNotifications((current) => current.map((notification) => notification.id === id ? { ...notification, read: true } : notification)),
-  }), [notifications, orders, quotes, requests])
+    listings,
+    addListing: (listing) => setListings(current => [...current, { ...listing, id: `listing-${Date.now()}` }]),
+    updateListingStock: (id, delta) => setListings(current => current.map(l => l.id === id ? { ...l, stock: Math.max(0, l.stock + delta) } : l)),
+    toggleListingActive: (id) => setListings(current => current.map(l => l.id === id ? { ...l, active: !l.active } : l)),
+    removeListing: (id) => setListings(current => current.filter(l => l.id !== id)),
+    placeOrder: (listingId, quantity) => {
+      const listing = listings.find(l => l.id === listingId)
+      if (!listing || listing.stock < quantity) return
+      const id = `order-${Date.now()}`
+      setOrders(current => [{ id, part: listing.name, buyer: 'Chamal Senarathna', quantity, total: listing.price * quantity, status: 'new' }, ...current])
+      setListings(current => current.map(l => l.id === listingId ? { ...l, stock: Math.max(0, l.stock - quantity) } : l))
+      setNotifications(current => [{ id: `note-${id}`, title: 'Parts order placed', body: `${listing.name} × ${quantity} added to your orders.`, read: false, href: '/seller/orders' }, ...current])
+    },
+  }), [listings, notifications, orders, quotes, requests])
 
   return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>
 }

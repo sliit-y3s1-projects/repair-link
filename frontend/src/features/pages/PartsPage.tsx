@@ -1,20 +1,54 @@
 import { useMemo, useState } from 'react'
 import { RiAddLine, RiCheckboxCircleFill, RiSearchLine, RiShoppingBagLine, RiStarFill } from '@remixicon/react'
+import { useMarketplace } from '@/features/mock/MarketplaceContext'
 
-const parts = [
-  { id: 'display', name: 'iPhone 13 OLED display assembly', seller: 'TechParts LK', price: 18500, condition: 'Compatible', stock: 12, rating: '4.9', imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85' },
-  { id: 'battery', name: 'MacBook Air M1 replacement battery', seller: 'Volt Store', price: 14200, condition: 'New', stock: 2, rating: '4.8', imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=85' },
-  { id: 'port', name: 'Samsung A54 USB-C charging port', seller: 'Genuine Fix', price: 2800, condition: 'New', stock: 8, rating: '4.7', imageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=900&q=85' },
-  { id: 'keyboard', name: 'Dell Inspiron keyboard assembly', seller: 'Laptop Lab', price: 6200, condition: 'Refurbished', stock: 4, rating: '4.9', imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=900&q=85' },
+const imageUrls = [
+  'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85',
+  'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=85',
+  'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=900&q=85',
+  'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=900&q=85',
 ]
 
 const categories = ['All parts', 'Phones', 'Laptops', 'Appliances', 'Accessories']
 
 export function PartsPage() {
+  const { listings, placeOrder } = useMarketplace()
   const [cart, setCart] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All parts')
   const [condition, setCondition] = useState('All conditions')
-  const visibleParts = useMemo(() => parts.filter((part) => (`${part.name} ${part.seller}`.toLowerCase().includes(query.toLowerCase())) && (condition === 'All conditions' || part.condition === condition) && (category === 'All parts' || part.name.toLowerCase().includes(category.slice(0, -1).toLowerCase()))), [category, condition, query])
-  return <main className="min-h-screen bg-white text-[#222]"><section className="border-b border-[#ebebeb]"><div className="mx-auto max-w-7xl px-6 py-10 lg:px-10"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#717171]">Spare parts marketplace</p><div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="text-3xl font-semibold tracking-[-.04em]">Parts with a clear history.</h1><p className="mt-2 text-sm text-[#717171]">Compare condition, compatibility, warranty, and seller reputation before you buy.</p></div><p className="flex items-center gap-2 text-sm font-semibold"><RiShoppingBagLine className="size-5" /> {cart.length} saved item{cart.length === 1 ? '' : 's'}</p></div></div></section><section className="mx-auto max-w-7xl px-6 py-7 lg:px-10"><div className="flex flex-col gap-5 lg:grid lg:grid-cols-[220px_1fr]"><aside className="lg:border-r lg:border-[#ebebeb] lg:pr-6"><p className="text-sm font-semibold">Browse by type</p><div className="mt-3 flex gap-2 overflow-x-auto lg:flex-col">{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm ${category === item ? 'bg-[#222] font-semibold text-white' : 'hover:bg-[#f7f7f7]'}`}>{item}</button>)}</div><label className="mt-7 hidden text-sm font-semibold lg:block">Condition<select value={condition} onChange={(event) => setCondition(event.target.value)} className="mt-2 w-full rounded-lg border border-[#ddd] bg-white p-3 text-sm font-normal"><option>All conditions</option><option>New</option><option>Compatible</option><option>Refurbished</option></select></label></aside><div><div className="flex gap-3"><div className="flex flex-1 items-center gap-2 rounded-lg border border-[#222] px-3"><RiSearchLine className="size-5 text-[#717171]" /><input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full py-3 text-sm outline-none" placeholder="Search a part, device, or seller" /></div><select value={condition} onChange={(event) => setCondition(event.target.value)} className="rounded-lg border border-[#ddd] bg-white px-3 text-sm lg:hidden"><option>All conditions</option><option>New</option><option>Compatible</option><option>Refurbished</option></select></div><p className="mt-6 text-sm text-[#717171]">{visibleParts.length} parts found</p><div className="mt-4 grid gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">{visibleParts.map((part) => <article key={part.id} className="group"><div className="relative aspect-square overflow-hidden rounded-xl bg-[#f3f3f3]"><img src={part.imageUrl} alt={part.name} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-xs font-semibold">{part.condition}</span></div><div className="pt-3"><div className="flex justify-between gap-3"><h2 className="text-sm font-semibold leading-5">{part.name}</h2><span className="flex shrink-0 items-center gap-1 text-xs"><RiStarFill className="size-3" /> {part.rating}</span></div><p className="mt-1 text-sm text-[#717171]">{part.seller} · <span className="inline-flex items-center gap-1 text-[#008a05]"><RiCheckboxCircleFill className="size-3" /> Verified</span></p><div className="mt-3 flex items-center justify-between"><p className="text-sm"><strong>Rs. {part.price.toLocaleString()}</strong> <span className="text-[#717171]">· {part.stock} left</span></p><button onClick={() => setCart((items) => items.includes(part.id) ? items.filter((item) => item !== part.id) : [...items, part.id])} className={`grid size-9 place-items-center rounded-full border ${cart.includes(part.id) ? 'border-[#222] bg-[#222] text-white' : 'border-[#222]'}`} aria-label={`Add ${part.name} to cart`}><RiAddLine className="size-5" /></button></div></div></article>)}</div>{visibleParts.length === 0 && <div className="mt-10 rounded-xl border border-dashed border-[#ccc] p-8 text-center text-sm text-[#717171]">No matching parts. Try another search or condition.</div>}</div></div></section></main>
+
+  const parts = useMemo(() =>
+    listings.filter(l => l.active).map((l, i) => ({
+      id: l.id,
+      name: l.name,
+      seller: 'TechParts LK',
+      price: l.price,
+      condition: l.condition,
+      stock: l.stock,
+      rating: '4.9',
+      imageUrl: imageUrls[i] ?? imageUrls[imageUrls.length - 1],
+    })),
+    [listings],
+  )
+
+  const visibleParts = useMemo(() =>
+    parts.filter((part) =>
+      part.name.toLowerCase().includes(query.toLowerCase()) &&
+      (condition === 'All conditions' || part.condition === condition) &&
+      (category === 'All parts' || part.name.toLowerCase().includes(category.slice(0, -1).toLowerCase()))
+    ),
+    [category, condition, query, parts],
+  )
+
+  function handleAddToCart(id: string) {
+    if (cart.includes(id)) {
+      setCart((items) => items.filter((item) => item !== id))
+    } else {
+      placeOrder(id, 1)
+      setCart((items) => [...items, id])
+    }
+  }
+
+  return <main className="min-h-screen bg-white text-[#222]"><section className="border-b border-[#ebebeb]"><div className="mx-auto max-w-7xl px-6 py-10 lg:px-10"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#717171]">Spare parts marketplace</p><div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="text-3xl font-semibold tracking-[-.04em]">Parts with a clear history.</h1><p className="mt-2 text-sm text-[#717171]">Compare condition, compatibility, warranty, and seller reputation before you buy.</p></div><p className="flex items-center gap-2 text-sm font-semibold"><RiShoppingBagLine className="size-5" /> {cart.length} saved item{cart.length === 1 ? '' : 's'}</p></div></div></section><section className="mx-auto max-w-7xl px-6 py-7 lg:px-10"><div className="flex flex-col gap-5 lg:grid lg:grid-cols-[220px_1fr]"><aside className="lg:border-r lg:border-[#ebebeb] lg:pr-6"><p className="text-sm font-semibold">Browse by type</p><div className="mt-3 flex gap-2 overflow-x-auto lg:flex-col">{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm ${category === item ? 'bg-[#222] font-semibold text-white' : 'hover:bg-[#f7f7f7]'}`}>{item}</button>)}</div><label className="mt-7 hidden text-sm font-semibold lg:block">Condition<select value={condition} onChange={(event) => setCondition(event.target.value)} className="mt-2 w-full rounded-lg border border-[#ddd] bg-white p-3 text-sm font-normal"><option>All conditions</option><option>New</option><option>Compatible</option><option>Refurbished</option></select></label></aside><div><div className="flex gap-3"><div className="flex flex-1 items-center gap-2 rounded-lg border border-[#222] px-3"><RiSearchLine className="size-5 text-[#717171]" /><input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full py-3 text-sm outline-none" placeholder="Search a part, device, or seller" /></div><select value={condition} onChange={(event) => setCondition(event.target.value)} className="rounded-lg border border-[#ddd] bg-white px-3 text-sm lg:hidden"><option>All conditions</option><option>New</option><option>Compatible</option><option>Refurbished</option></select></div><p className="mt-6 text-sm text-[#717171]">{visibleParts.length} parts found</p><div className="mt-4 grid gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">{visibleParts.map((part) => <article key={part.id} className="group"><div className="relative aspect-square overflow-hidden rounded-xl bg-[#f3f3f3]"><img src={part.imageUrl} alt={part.name} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-xs font-semibold">{part.condition}</span></div><div className="pt-3"><div className="flex justify-between gap-3"><h2 className="text-sm font-semibold leading-5">{part.name}</h2><span className="flex shrink-0 items-center gap-1 text-xs"><RiStarFill className="size-3" /> {part.rating}</span></div><p className="mt-1 text-sm text-[#717171]">{part.seller} · <span className="inline-flex items-center gap-1 text-[#008a05]"><RiCheckboxCircleFill className="size-3" /> Verified</span></p><div className="mt-3 flex items-center justify-between"><p className="text-sm"><strong>Rs. {part.price.toLocaleString()}</strong> <span className="text-[#717171]">· {part.stock} left</span></p><button onClick={() => part.stock > 0 && handleAddToCart(part.id)} disabled={part.stock === 0} className={`grid size-9 place-items-center rounded-full border ${part.stock === 0 ? 'border-[#ccc] bg-[#f5f5f5] text-[#bbb] cursor-not-allowed' : cart.includes(part.id) ? 'border-[#222] bg-[#222] text-white' : 'border-[#222]'}`} aria-label={part.stock === 0 ? 'Out of stock' : `Add ${part.name} to cart`}>{part.stock === 0 ? <span className="text-[10px] font-semibold leading-none px-1">OOS</span> : <RiAddLine className="size-5" />}</button></div></div></article>)}</div>{visibleParts.length === 0 && <div className="mt-10 rounded-xl border border-dashed border-[#ccc] p-8 text-center text-sm text-[#717171]">No matching parts. Try another search or condition.</div>}</div></div></section></main>
 }

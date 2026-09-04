@@ -1,9 +1,20 @@
 import { useState } from "react";
 import { RiMenuLine } from "@remixicon/react";
 import { Link, NavLink } from "react-router";
+import { useAuth, roleDashboardPaths, roleLabels } from "@/features/auth/AuthContext";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { session } = useAuth();
+
+  const initials = session
+    ? session.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('')
+    : null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#ebebeb] bg-white">
@@ -78,7 +89,11 @@ export function Header() {
             <Link to="/">Find a repairer</Link>
             <Link to="/parts">Browse parts</Link>
             <Link to="/technician">Become a repairer</Link>
-            <Link to="/dashboard">My repairs</Link>
+            {session ? (
+              <Link to={roleDashboardPaths[session.role]}>My workspace</Link>
+            ) : (
+              <Link to="/auth">Sign in</Link>
+            )}
           </div>
         </nav>
       )}

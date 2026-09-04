@@ -1,11 +1,88 @@
 import { Link } from 'react-router'
+import { useParams } from 'react-router'
 import { RiArrowRightLine, RiCalendarCheckLine, RiMapPin2Line, RiMessage2Line, RiShieldCheckFill, RiStarFill } from '@remixicon/react'
 import { useAuth } from '@/features/auth/AuthContext'
+import { repairers } from '@/features/discovery/data'
 import { PageHeader } from './PageHeader'
 
 export function RepairerProfilePage() {
   const { session } = useAuth()
+  const { repairerId } = useParams()
+  const repairer = repairers.find(r => r.id === repairerId) ?? repairers[0]
   const messagePath = session ? `/${session.role}/messages` : '/auth'
-  const requestPath = session?.role === 'consumer' ? '/request?repairer=kamals-device-care' : '/auth'
-  return <><PageHeader eyebrow="Verified repairer" title="Kamal’s Device Care"><p className="mt-3 text-sm text-[#717171]">Phone and laptop repairs in Colombo, with clear quotes before you book.</p></PageHeader><section className="mx-auto grid max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-10"><div><div className="aspect-[16/8] rounded-xl bg-[linear-gradient(135deg,#dbece0,#88ad95)]" /><div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-start"><div className="grid size-16 shrink-0 place-items-center rounded-full bg-[#183f2f] text-lg font-bold text-white">KD</div><div><h2 className="text-xl font-semibold">Phone & laptop repairs</h2><p className="mt-1 flex items-center gap-1 text-sm text-[#717171]"><RiMapPin2Line className="size-4" /> Colombo · 1.4 km away</p><p className="mt-2 flex items-center gap-1 text-sm"><RiStarFill className="size-4 text-[#d99b38]" /> 4.91 · 124 reviews <span className="mx-1">·</span> 8 years experience</p><nav className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[#157a5a]"><a href="#services">Services</a><a href="#availability">Availability</a><a href="#reviews">Reviews</a></nav></div></div><section id="services" className="mt-8 border-t border-[#ebebeb] pt-7"><h3 className="text-lg font-semibold">Services and pricing</h3><div className="mt-4 grid gap-3 sm:grid-cols-2">{[['Screen replacement', 'From Rs. 4,500'], ['Battery replacement', 'From Rs. 6,500'], ['Laptop diagnostic', 'From Rs. 3,000'], ['Board-level repair', 'Estimate after inspection']].map(([service, price]) => <div key={service} className="rounded-lg border border-[#e1e7e2] p-4"><p className="font-semibold">{service}</p><p className="mt-1 text-sm text-[#6c796f]">{price}</p></div>)}</div></section><section id="availability" className="mt-8 border-t border-[#ebebeb] pt-7"><h3 className="flex items-center gap-2 text-lg font-semibold"><RiCalendarCheckLine className="size-5 text-[#157a5a]" /> Availability</h3><p className="mt-3 text-sm leading-6 text-[#555]">Open today until 7:00 PM. Shop visits and selected mobile repairs are available in Colombo 01–07.</p></section><section id="reviews" className="mt-8 border-t border-[#ebebeb] pt-7"><div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Recent reviews</h3><span className="text-sm text-[#717171]">124 verified</span></div><div className="mt-4 space-y-3"><p className="rounded-lg bg-[#f7f9f7] p-4 text-sm leading-6">“Clear quote, quick turnaround, and my phone works perfectly again.” <strong>— Nadeesha</strong></p><p className="rounded-lg bg-[#f7f9f7] p-4 text-sm leading-6">“They explained the options before starting and finished on time.” <strong>— Ishan</strong></p></div></section></div><aside className="h-fit rounded-xl border border-[#dce5de] bg-white p-6 shadow-sm lg:sticky lg:top-8"><p className="text-lg font-semibold">Request a quote</p><p className="mt-2 text-sm text-[#717171]">Usually responds within an hour.</p><div className="mt-5 rounded-lg bg-[#f3f8f4] p-4 text-sm"><p className="flex gap-2 font-semibold"><RiShieldCheckFill className="size-5 text-[#157a5a]" /> Verified repairer</p><p className="mt-3 font-semibold">From Rs. 4,500</p><p className="mt-1 text-xs text-[#6c796f]">No payment needed to request quotes.</p></div><Link to={requestPath} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#157a5a] py-3 text-sm font-semibold text-white hover:bg-[#0f513d]">Request a quote <RiArrowRightLine className="size-4" /></Link><Link to={messagePath} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#cfdad1] py-3 text-sm font-semibold text-[#355245]"><RiMessage2Line className="size-4" /> Ask a question</Link>{!session && <p className="mt-3 text-center text-xs text-[#6d7a72]">Sign in to contact this repairer.</p>}</aside></section></>
+  const requestPath = session?.role === 'consumer' ? `/request?repairer=${repairer.id}` : '/auth'
+  return (
+    <>
+      <PageHeader eyebrow="Verified repairer" title={repairer.name}>
+        <p className="mt-3 text-sm text-[#717171]">Phone and laptop repairs in Colombo, with clear quotes before you book.</p>
+      </PageHeader>
+      <section className="mx-auto grid max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-10">
+        <div>
+          <img src={repairer.imageUrl} alt="" className="aspect-[16/8] w-full rounded-xl object-cover" />
+          <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-start">
+            <div className="grid size-16 shrink-0 place-items-center rounded-full bg-[#183f2f] text-lg font-bold text-white">
+              {repairer.initials}
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold">{repairer.specialty}</h2>
+              <p className="mt-1 flex items-center gap-1 text-sm text-[#717171]">
+                <RiMapPin2Line className="size-4" /> Colombo · {repairer.distance}
+              </p>
+              <p className="mt-2 flex items-center gap-1 text-sm">
+                <RiStarFill className="size-4 text-[#d99b38]" /> {repairer.rating} · {repairer.reviews} reviews
+              </p>
+              <nav className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[#157a5a]">
+                <a href="#services">Services</a>
+                <a href="#availability">Availability</a>
+                <a href="#reviews">Reviews</a>
+              </nav>
+            </div>
+          </div>
+          <section id="services" className="mt-8 border-t border-[#ebebeb] pt-7">
+            <h3 className="text-lg font-semibold">Services and pricing</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[['Screen replacement', 'From Rs. 4,500'], ['Battery replacement', 'From Rs. 6,500'], ['Laptop diagnostic', 'From Rs. 3,000'], ['Board-level repair', 'Estimate after inspection']].map(([service, price]) => (
+                <div key={service} className="rounded-lg border border-[#e1e7e2] p-4">
+                  <p className="font-semibold">{service}</p>
+                  <p className="mt-1 text-sm text-[#6c796f]">{price}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section id="availability" className="mt-8 border-t border-[#ebebeb] pt-7">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <RiCalendarCheckLine className="size-5 text-[#157a5a]" /> Availability
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-[#555]">Open today until 7:00 PM. Shop visits and selected mobile repairs are available in Colombo 01–07.</p>
+          </section>
+          <section id="reviews" className="mt-8 border-t border-[#ebebeb] pt-7">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Recent reviews</h3>
+              <span className="text-sm text-[#717171]">{repairer.reviews} verified</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              <p className="rounded-lg bg-[#f7f9f7] p-4 text-sm leading-6">"Clear quote, quick turnaround, and my phone works perfectly again." <strong>— Nadeesha</strong></p>
+              <p className="rounded-lg bg-[#f7f9f7] p-4 text-sm leading-6">"They explained the options before starting and finished on time." <strong>— Ishan</strong></p>
+            </div>
+          </section>
+        </div>
+        <aside className="h-fit rounded-xl border border-[#dce5de] bg-white p-6 shadow-sm lg:sticky lg:top-8">
+          <p className="text-lg font-semibold">Request a quote</p>
+          <p className="mt-2 text-sm text-[#717171]">Usually responds within an hour.</p>
+          <div className="mt-5 rounded-lg bg-[#f3f8f4] p-4 text-sm">
+            <p className="flex gap-2 font-semibold"><RiShieldCheckFill className="size-5 text-[#157a5a]" /> Verified repairer</p>
+            <p className="mt-3 font-semibold">From {repairer.price}</p>
+            <p className="mt-1 text-xs text-[#6c796f]">No payment needed to request quotes.</p>
+          </div>
+          <Link to={requestPath} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#157a5a] py-3 text-sm font-semibold text-white hover:bg-[#0f513d]">
+            Request a quote <RiArrowRightLine className="size-4" />
+          </Link>
+          <Link to={messagePath} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#cfdad1] py-3 text-sm font-semibold text-[#355245]">
+            <RiMessage2Line className="size-4" /> Ask a question
+          </Link>
+          {!session && <p className="mt-3 text-center text-xs text-[#6d7a72]">Sign in to contact this repairer.</p>}
+        </aside>
+      </section>
+    </>
+  )
 }
