@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { RiArrowRightLine, RiCheckLine } from "@remixicon/react";
 import { PageHeader } from "./PageHeader";
+import { useNavigate } from "react-router";
+import { useMarketplace } from "@/features/mock/MarketplaceContext";
 
 const steps = ["Device", "Issue", "Location", "Review"];
 
@@ -8,6 +10,8 @@ export function RequestPage() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [device, setDevice] = useState("Phone");
+  const { createRequest } = useMarketplace();
+  const navigate = useNavigate();
 
   if (submitted)
     return (
@@ -26,7 +30,7 @@ export function RequestPage() {
           </p>
           <a
             className="mt-7 inline-flex rounded-lg bg-[#222] px-5 py-3 text-sm font-semibold text-white"
-            href="/dashboard"
+            href="/consumer/repairs"
           >
             View my repairs
           </a>
@@ -130,10 +134,23 @@ export function RequestPage() {
               Back
             </button>
             <button
-              onClick={() =>
-                step === 3 ? setSubmitted(true) : setStep(step + 1)
-              }
-              className="flex items-center gap-2 rounded-lg bg-[#ff385c] px-5 py-3 text-sm font-semibold text-white"
+              onClick={() => {
+                if (step !== 3) {
+                  setStep(step + 1);
+                  return;
+                }
+                const requestId = createRequest({
+                  title: `${device} repair request`,
+                  device,
+                  issue: "My screen is cracked and the display flickers.",
+                  location: "Colombo, Sri Lanka",
+                  preferredTime: "Any time",
+                  budget: 8000,
+                });
+                setSubmitted(true);
+                navigate(`/consumer/repairs/${requestId}`);
+              }}
+              className="flex items-center gap-2 rounded-lg bg-[#157a5a] px-5 py-3 text-sm font-semibold text-white"
             >
               {step === 3 ? "Request quotes" : "Continue"}{" "}
               <RiArrowRightLine className="size-4" />

@@ -1,4 +1,5 @@
 export type Repairer = {
+  id: string
   initials: string
   name: string
   specialty: string
@@ -8,4 +9,8 @@ export type Repairer = {
   price: string
   color: string
   tag: string
+  imageUrl: string
+  coordinates: [number, number]
+  availableToday: boolean
+  mobileService: boolean
 }
