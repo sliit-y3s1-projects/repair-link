@@ -8,6 +8,27 @@
       "when": 1788497145514,
       "tag": "0000_mute_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788511277610,
+      "tag": "0001_mvp_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788513346005,
+      "tag": "0002_technician_profile_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788513567670,
+      "tag": "0003_admin_reports",
+      "breakpoints": true
     }
   ]
 }

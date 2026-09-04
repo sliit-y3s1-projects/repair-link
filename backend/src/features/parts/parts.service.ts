@@ -6,23 +6,19 @@ import {
 } from './parts.schema';
 import { PartListing, PartOrder, partsRepository } from './parts.repository';
 import { ApiError } from '../../shared/api-response';
+import type { DevelopmentActor } from '../../shared/types/actor';
 
-export interface DevActor {
-  id: string;
-  name: string;
-  role: 'consumer' | 'technician' | 'seller' | 'admin';
-  storeName?: string;
-}
+export type DevActor = DevelopmentActor;
 
 export const partsService = {
   // Public search for active spare parts
-  searchParts(query: SearchPartsQuery): PartListing[] {
+  async searchParts(query: SearchPartsQuery): Promise<PartListing[]> {
     return partsRepository.searchListings(query);
   },
 
   // Get single listing details
-  getPartById(id: string): PartListing {
-    const part = partsRepository.findById(id);
+  async getPartById(id: string): Promise<PartListing> {
+    const part = await partsRepository.findById(id);
     if (!part || !part.isActive) {
       throw new ApiError(404, 'Spare part listing not found');
     }
@@ -30,7 +26,7 @@ export const partsService = {
   },
 
   // Seller creates a new listing
-  createListing(input: CreatePartListingInput, actor: DevActor): PartListing {
+  async createListing(input: CreatePartListingInput, actor: DevActor): Promise<PartListing> {
     if (actor.role !== 'seller' && actor.role !== 'admin') {
       throw new ApiError(403, 'Forbidden: Only verified sellers can publish spare parts listings');
     }
@@ -45,8 +41,8 @@ export const partsService = {
   },
 
   // Seller updates a listing (Enforces ownership & stock bounds)
-  updateListing(id: string, input: UpdatePartListingInput, actor: DevActor): PartListing {
-    const existing = partsRepository.findById(id);
+  async updateListing(id: string, input: UpdatePartListingInput, actor: DevActor): Promise<PartListing> {
+    const existing = await partsRepository.findById(id);
     if (!existing) {
       throw new ApiError(404, 'Spare part listing not found');
     }
@@ -64,16 +60,24 @@ export const partsService = {
       );
     }
 
-    const updated = partsRepository.updateListing(id, input);
+    const updated = await partsRepository.updateListing(id, input);
     if (!updated) {
       throw new ApiError(500, 'Failed to update spare part listing');
     }
     return updated;
   },
+  async removeListing(id: string, actor: DevActor) {
+    const existing = await partsRepository.findById(id);
+    if (!existing) throw new ApiError(404, 'Spare part listing not found');
+    if (existing.sellerId !== actor.id && actor.role !== 'admin') throw new ApiError(403, 'You can only remove your own listings');
+    const removed = await partsRepository.removeListing(id);
+    if (!removed) throw new ApiError(404, 'Spare part listing not found');
+    return removed;
+  },
 
   // Buyer places an order (Executes stock decrement transaction & snapshot unit price)
-  createOrder(input: CreateOrderInput, buyer: DevActor): PartOrder {
-    const listing = partsRepository.findById(input.listingId);
+  async createOrder(input: CreateOrderInput, buyer: DevActor): Promise<PartOrder> {
+    const listing = await partsRepository.findById(input.listingId);
     if (!listing || !listing.isActive) {
       throw new ApiError(404, 'Target spare part listing does not exist or is inactive');
     }
@@ -91,9 +95,8 @@ export const partsService = {
     }
 
     try {
-      const order = partsRepository.executeOrderTransaction(listing, {
+      const order = await partsRepository.executeOrderTransaction(listing.id, {
         id: buyer.id,
-        name: buyer.name,
       }, input);
       return order;
     } catch (err: unknown) {
@@ -102,8 +105,8 @@ export const partsService = {
   },
 
   // Order queries
-  getOrderById(orderId: string, actor: DevActor): PartOrder {
-    const order = partsRepository.findOrderById(orderId);
+  async getOrderById(orderId: string, actor: DevActor): Promise<PartOrder> {
+    const order = await partsRepository.findOrderById(orderId);
     if (!order) {
       throw new ApiError(404, 'Order not found');
     }
@@ -116,10 +119,14 @@ export const partsService = {
     return order;
   },
 
-  getMyOrders(actor: DevActor): PartOrder[] {
-    if (actor.role === 'seller') {
-      return partsRepository.listOrdersBySeller(actor.id);
-    }
-    return partsRepository.listOrdersByBuyer(actor.id);
+  async getMyOrders(actor: DevActor): Promise<PartOrder[]> {
+    return partsRepository.listOrdersForActor(actor.id);
+  },
+
+  async updateOrderStatus(orderId: string, status: PartOrder['status'], actor: DevActor): Promise<PartOrder> {
+    if (actor.role !== 'seller' && actor.role !== 'admin') throw new ApiError(403, 'Only sellers can fulfil orders');
+    const updated = await partsRepository.updateOrderStatus(orderId, actor.id, status);
+    if (!updated) throw new ApiError(404, 'Order not found or not owned by this seller');
+    return updated;
   },
 };

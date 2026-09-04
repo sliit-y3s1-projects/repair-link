@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { RiFlagLine, RiShieldCheckLine } from '@remixicon/react'
 import { RoleLayout } from './RoleLayout'
 import { useMarketplace } from '@/features/mock/MarketplaceContext'
@@ -23,6 +24,10 @@ export function AdminWorkspace() {
             <p className="mt-3 text-xs text-[#768278]">{detail}</p>
           </article>
         ))}
+      </div>
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#cfe0d3] bg-[#f0f8f1] p-5">
+        <div><p className="font-semibold text-[#244a32]">Admin CRUD controls</p><p className="mt-1 text-sm text-[#55715d]">Manage device categories, verification, reports, and moderation actions.</p></div>
+        <Link to="/admin/management" className="rounded-lg bg-[#157a5a] px-4 py-2.5 text-sm font-semibold text-white">Open management</Link>
       </div>
       <div className="mt-7 grid gap-6 lg:grid-cols-2">
         <article className="overflow-hidden rounded-xl border border-[#dce5de] bg-white">

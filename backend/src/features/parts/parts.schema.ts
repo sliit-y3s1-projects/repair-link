@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const PartConditionEnum = z.enum(['new', 'compatible', 'refurbished', 'used']);
 export type PartCondition = z.infer<typeof PartConditionEnum>;
 
-export const OrderStatusEnum = z.enum(['pending', 'confirmed', 'shipped', 'collected', 'completed', 'cancelled']);
+export const OrderStatusEnum = z.enum(['pending', 'confirmed', 'packed', 'shipped', 'collected', 'completed', 'cancelled']);
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
 // Schema for creating a spare part listing

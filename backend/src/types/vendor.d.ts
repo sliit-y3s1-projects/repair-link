@@ -6,6 +6,7 @@ declare module 'express' {
     originalUrl: string;
     params: Record<string, string>;
     query: Record<string, unknown>;
+    devActor?: import('../shared/types/actor').DevelopmentActor;
   }
 
   export interface Response {
